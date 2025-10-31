@@ -43,6 +43,14 @@
       font-size: 14px;
     }
 
+    /* Filter input styles */
+    .filters input {
+      width: 90%;
+      padding: 4px;
+      font-size: 12px;
+      box-sizing: border-box;
+    }
+
     th {
       background-color: #007bff;
       color: #fff;
@@ -140,6 +148,27 @@
           <th>Αξ. 3ου</th>
           <th>Ενέργειες</th>
         </tr>
+        <tr class="filters">
+          <th><input type="text"
+              placeholder="Α/Α" /></th>
+          <th><input type="text"
+              placeholder="A/Α e-adeies" /></th>
+          <th><input type="text"
+              placeholder=" Επωνυμία" /></th>
+          <th><input type="text"
+              placeholder="Είδος δραστηριότητας" /></th>
+          <th><input type="text"
+              placeholder="Δήμος" /></th>
+          <th><input type="text"
+              placeholder="Οδός" /></th>
+          <th><input type="text"
+              placeholder="Αξ. 1ου" /></th>
+          <th><input type="text"
+              placeholder="Αξ. 2ου" /></th>
+          <th><input type="text"
+              placeholder="Αξ. 3ου" /></th>
+          <th></th>
+        </tr>
       </thead>
       <tbody>
         <!-- Rows will be populated by JavaScript -->
@@ -147,56 +176,65 @@
     </table>
   </div>
 
-  <script>
-    async function loadRecords() {
-      const response = await fetch('/api/axiologiseis');
-      const records = await response.json();
+<script>
+async function loadRecords() {
+  const tbody = document.querySelector('#recordsTable tbody');
+  tbody.innerHTML = '';
+  const res = await fetch('/api/axiologiseis');
+  const records = await res.json();
 
-      const tbody = document.querySelector('#recordsTable tbody');
-      tbody.innerHTML = '';
-
-      records.forEach(record => {
-        const tr = document.createElement('tr');
-
-        tr.innerHTML = `
+  records.forEach(record => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
       <td>${record.id}</td>
       <td>${record.aa_aitisis}</td>
-      <td>${record.eponimia}</td>
-      <td>${record.eidos_drast}</td>
-      <td>${record.perioxi}</td>
+      <td class="wrap">${record.eponimia}</td>
+      <td class="wrap">${record.eidos_drast}</td>
+      <td>${record.perifereia}</td>
       <td>${record.odos}</td>
       <td>${record.axiologisi_lvl1}</td>
       <td>${record.axiologisi_lvl2}</td>
       <td>${record.axiologisi_lvl3}</td>
       <td>
-        <a class="button button-edit" href="edit.html?id=${record.id}">Edit</a>
-        <button class="button button-delete" onclick="deleteRecord(${record.id})">Delete</button>
+        <button class="btn btn-edit" onclick="editRecord(${record.id})">Edit</button>
+        <button class="btn btn-delete" onclick="deleteRecord(${record.id})">Delete</button>
       </td>
     `;
+    tbody.appendChild(tr);
+  });
+}
 
-        tbody.appendChild(tr);
-      });
-    }
+function editRecord(id) {
+  window.location.href = `edit.html?id=${id}`;
+}
 
-    async function deleteRecord(id) {
-      if (!confirm('Are you sure you want to delete this record?')) return;
+async function deleteRecord(id) {
+  if (confirm('Are you sure you want to delete this record?')) {
+    const res = await fetch(`/api/axiologiseis/${id}`, { method: 'DELETE' });
+    if (res.ok) loadRecords();
+    else alert('Failed to delete record');
+  }
+}
 
-      const response = await fetch('/api/axiologiseis/' + id, {
-        method: 'DELETE'
-      });
+// Column filters
+document.querySelectorAll('.filters input').forEach((input, colIndex) => {
+  input.addEventListener('keyup', () => {
+    const filter = input.value.toLowerCase();
+    const rows = document.querySelectorAll('#recordsTable tbody tr');
 
-      if (response.ok) {
-        alert('Record deleted!');
-        loadRecords();
-      } else {
-        alert('Error deleting record.');
+    rows.forEach(row => {
+      const cell = row.cells[colIndex];
+      if (cell) {
+        const text = cell.textContent.toLowerCase();
+        row.style.display = text.includes(filter) ? '' : 'none';
       }
-    }
+    });
+  });
+});
 
-    // Load records on page load
-    loadRecords();
-  </script>
+// Load records on page load
+loadRecords();
+</script>
 
 </body>
-
 </html>
