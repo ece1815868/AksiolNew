@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>List of Axiologiseis</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 100%;
+      margin: 0 auto;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    table {
+      width: 100%;
+      table-layout: fixed;
+      /* Forces columns to stay within width */
+      word-wrap: normal;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      background-color: #007bff;
+      color: #fff;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    tr:hover {
+      background-color: #e9ecef;
+    }
+
+    .button {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 5px;
+      color: #fff;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 13px;
+      margin: 0 2px;
+    }
+
+    .button-edit {
+      background-color: #ffc107;
+    }
+
+    .button-edit:hover {
+      background-color: #e0a800;
+    }
+
+    .button-delete {
+      background-color: #dc3545;
+    }
+
+    .button-delete:hover {
+      background-color: #c82333;
+    }
+
+    .top-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+
+    .top-buttons a {
+      text-decoration: none;
+      padding: 8px 15px;
+      background-color: #007bff;
+      color: white;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+
+    .top-buttons a:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <h1>List of Axiologiseis</h1>
+
+    <div class="top-buttons">
+      <a href="index.html">🏠 Home</a>
+      <a href="add.html">➕ Add New</a>
+    </div>
+
+    <table id="recordsTable">
+      <colgroup>
+        <col style="width: 3%;"> <!-- a/a -->
+        <col style="width: 5%;"> <!-- AA eadeies -->
+        <col style="width: 15%;"> <!-- Eponimia -->
+        <col style="width: 15%;"> <!-- Eidos -->
+        <col style="width: 10%;"> <!-- Dhmos -->
+        <col style="width: 20%;"> <!-- odos -->
+        <col style="width: 5%;"> <!-- aks 1ou -->
+        <col style="width: 5%;"> <!-- aks 2ou -->
+        <col style="width: 5%;"> <!-- aks 3ou -->
+        <col style="width: 6%;"> <!-- Actions -->
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Α/Α</th>
+          <th>A/Α e-adeies</th>
+          <th>Επωνυμία</th>
+          <th>Είδος δραστηριότητας</th>
+          <th>Δήμος</th>
+          <th>Οδός</th>
+          <th>Αξ. 1ου</th>
+          <th>Αξ. 2ου</th>
+          <th>Αξ. 3ου</th>
+          <th>Ενέργειες</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Rows will be populated by JavaScript -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    async function loadRecords() {
+      const response = await fetch('/api/axiologiseis');
+      const records = await response.json();
+
+      const tbody = document.querySelector('#recordsTable tbody');
+      tbody.innerHTML = '';
+
+      records.forEach(record => {
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+      <td>${record.id}</td>
+      <td>${record.aa_aitisis}</td>
+      <td>${record.eponimia}</td>
+      <td>${record.eidos_drast}</td>
+      <td>${record.perioxi}</td>
+      <td>${record.odos}</td>
+      <td>${record.axiologisi_lvl1}</td>
+      <td>${record.axiologisi_lvl2}</td>
+      <td>${record.axiologisi_lvl3}</td>
+      <td>
+        <a class="button button-edit" href="edit.html?id=${record.id}">Edit</a>
+        <button class="button button-delete" onclick="deleteRecord(${record.id})">Delete</button>
+      </td>
+    `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function deleteRecord(id) {
+      if (!confirm('Are you sure you want to delete this record?')) return;
+
+      const response = await fetch('/api/axiologiseis/' + id, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        alert('Record deleted!');
+        loadRecords();
+      } else {
+        alert('Error deleting record.');
+      }
+    }
+
+    // Load records on page load
+    loadRecords();
+  </script>
+
+</body>
+
+</html>

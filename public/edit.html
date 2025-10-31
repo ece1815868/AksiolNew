@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Axiologisi</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f7f7f7;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px 20px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 800px;
+      margin: 0 auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      font-weight: bold;
+    }
+
+    input {
+      padding: 6px 10px;
+      margin-top: 4px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      grid-column: span 2;
+      padding: 10px;
+      background: #28a745;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #218838;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Επεξεργασία</h2>
+
+<form id="editForm">
+  <label>Α/Α e-adeies
+    <input name="aa_aitisis" type="text" required>
+  </label>
+
+  <label>Ημερομηνία αξιολόγησης
+    <input name="imnia" type="text" required>
+  </label>
+
+  <label>Ημερομηνία Πράξης
+    <input name="imnia_praxis" type="text">
+  </label>
+
+  <label>Επωνυμία
+    <input name="eponimia" type="text" required>
+  </label>
+
+  <label>Είδος δραστηριότητας
+    <input name="eidos_drast" type="text">
+  </label>
+
+  <label>Περιφέρεια
+    <input name="perifereia" type="text">
+  </label>
+
+  <label>Περιοχή
+    <input name="perioxi" type="text">
+  </label>
+
+  <label>Οδός
+    <input name="odos" type="text">
+  </label>
+
+  <label>TK
+    <input name="tk" type="text">
+  </label>
+
+  <label>Τηλέφωνο
+    <input name="tilefono" type="text">
+  </label>
+
+  <label>eMail
+    <input name="email" type="email">
+  </label>
+
+  <label>Αξιολόγηση 1ου Επιπέδου
+    <input name="axiologisi_lvl1" type="text">
+  </label>
+
+  <label>Αξιολόγηση 2ου Επιπέδου
+    <input name="axiologisi_lvl2" type="text">
+  </label>
+
+  <label>Αξιολόγηση 3ου Επιπέδου
+    <input name="axiologisi_lvl3" type="text">
+  </label>
+
+  <button type="submit">Αποθήκευση</button>
+</form>
+
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+const recordId = urlParams.get('id');
+
+async function loadRecord() {
+  const response = await fetch('/api/axiologiseis/' + recordId);
+  const record = await response.json();
+
+  const form = document.getElementById('editForm');
+  for (const key in record) {
+    if (form.elements[key]) {
+      form.elements[key].value = record[key];
+    }
+  }
+}
+
+document.getElementById('editForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const data = Object.fromEntries(formData.entries());
+
+  const response = await fetch('/api/axiologiseis/' + recordId, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+
+  if (response.ok) {
+    alert('Επιτυχής ενημέρωση!');
+    window.location.href = 'list.html';
+  } else {
+    alert('Error updating record.');
+  }
+});
+
+// Load record on page load
+loadRecord();
+</script>
+
+</body>
+</html>
