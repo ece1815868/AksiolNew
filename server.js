@@ -1,6 +1,9 @@
 const express = require("express");
 const sqlite3 = require("sqlite3").verbose();
 const bodyParser = require("body-parser");
+const ExcelJS = require("exceljs");
+
+//import { fileURLToPath } from "url";
 const path = require("path");
 const cors = require("cors");
 
@@ -107,6 +110,62 @@ app.delete("/api/axiologiseis/:id", (req, res) => {
     else res.json({ deleted: this.changes });
   });
 });
+
+// Export excel
+app.get("/api/axiologiseis/:id/excel", (req, res) => {
+  const id = req.params.id;
+
+  db.get("SELECT * FROM Axiologiseis WHERE id = ?", [id], async (err, record) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).send("Σφάλμα ανάκτησης δεδομένων");
+    }
+
+    if (!record) {
+      return res.status(404).send("Η εγγραφή δεν βρέθηκε");
+    }
+
+    try {
+      const templatePath = path.join(__dirname, "template.xlsx");
+
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.readFile(templatePath);
+      const sheet = workbook.worksheets[0];
+
+      // --- Fill your cells with database values ---
+      sheet.getCell("E4").value = record.id;
+      sheet.getCell("G4").value = record.imnia;
+      sheet.getCell("D6").value = record.aa_aitisis;
+
+      sheet.getCell("E9").value = record.eponimia;
+      sheet.getCell("E11").value = record.eidos_drast;
+      sheet.getCell("E12").value = record.perifereia;
+      sheet.getCell("E13").value = record.perioxi;
+      sheet.getCell("E14").value = record.odos;
+      sheet.getCell("E15").value = record.tk;
+      sheet.getCell("E16").value = record.tilefono;
+      sheet.getCell("E17").value = record.email;
+
+      const fileName = `${record.id}.${record.eponimia}.${record.eidos_drast}.xlsx`;
+      // --- Send the file ---
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename*=UTF-8''${encodeURIComponent(fileName)}`
+      );
+
+      await workbook.xlsx.write(res);
+      res.end();
+    } catch (error) {
+      console.error("Excel export error:", error);
+      res.status(500).send("Σφάλμα κατά τη δημιουργία του Excel αρχείου");
+    }
+  });
+});
+
 
 // Start server
 app.listen(PORT, () => {

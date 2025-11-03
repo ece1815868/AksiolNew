@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>List of Axiologiseis</title>
+  <title>Λίστα Αξιολογήσεων</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -115,18 +115,18 @@
 <body>
 
   <div class="container">
-    <h1>List of Axiologiseis</h1>
+    <h1>Λίστα αξιολογήσεων</h1>
 
     <div class="top-buttons">
-      <a href="index.html">🏠 Home</a>
-      <a href="add.html">➕ Add New</a>
+      <a href="index.html">🏠 Αρχική</a>
+      <a href="add.html">➕ Προσθήκη</a>
     </div>
 
     <table id="recordsTable">
       <colgroup>
         <col style="width: 3%;"> <!-- a/a -->
         <col style="width: 5%;"> <!-- AA eadeies -->
-        <col style="width: 15%;"> <!-- Eponimia -->
+        <col style="width: 5%;"> <!-- Eponimia -->
         <col style="width: 15%;"> <!-- Eidos -->
         <col style="width: 10%;"> <!-- Dhmos -->
         <col style="width: 20%;"> <!-- odos -->
@@ -139,9 +139,9 @@
         <tr>
           <th>Α/Α</th>
           <th>A/Α e-adeies</th>
+          <th>Ημερομηνία</th>
           <th>Επωνυμία</th>
           <th>Είδος δραστηριότητας</th>
-          <th>Δήμος</th>
           <th>Οδός</th>
           <th>Αξ. 1ου</th>
           <th>Αξ. 2ου</th>
@@ -154,11 +154,11 @@
           <th><input type="text"
               placeholder="A/Α e-adeies" /></th>
           <th><input type="text"
+              placeholder="Ημερομηνία" /></th>
+          <th><input type="text"
               placeholder=" Επωνυμία" /></th>
           <th><input type="text"
               placeholder="Είδος δραστηριότητας" /></th>
-          <th><input type="text"
-              placeholder="Δήμος" /></th>
           <th><input type="text"
               placeholder="Οδός" /></th>
           <th><input type="text"
@@ -188,16 +188,17 @@ async function loadRecords() {
     tr.innerHTML = `
       <td>${record.id}</td>
       <td>${record.aa_aitisis}</td>
+      <td>${record.imnia}</td>
       <td class="wrap">${record.eponimia}</td>
       <td class="wrap">${record.eidos_drast}</td>
-      <td>${record.perifereia}</td>
-      <td>${record.odos}</td>
+      <td>${record.odos}, ${record.perifereia}</td>
       <td>${record.axiologisi_lvl1}</td>
       <td>${record.axiologisi_lvl2}</td>
       <td>${record.axiologisi_lvl3}</td>
       <td>
         <button class="btn btn-edit" onclick="editRecord(${record.id})">Edit</button>
-        <button class="btn btn-delete" onclick="deleteRecord(${record.id})">Delete</button>
+        <button class="btn btn-excel" onclick="exportToExcel(${record.id})">Excel</button>
+        <button class="btn btn-delete" onclick="deleteRecord(${record.id})">Del</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -209,11 +210,15 @@ function editRecord(id) {
 }
 
 async function deleteRecord(id) {
-  if (confirm('Are you sure you want to delete this record?')) {
+  if (confirm('Επιθυμέτε να διαγράψετε την εγγραφή?')) {
     const res = await fetch(`/api/axiologiseis/${id}`, { method: 'DELETE' });
     if (res.ok) loadRecords();
     else alert('Failed to delete record');
   }
+}
+
+function exportToExcel(id) {
+  window.open(`/api/axiologiseis/${id}/excel`, "_blank");
 }
 
 // Column filters
