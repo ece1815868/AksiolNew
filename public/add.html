@@ -67,11 +67,11 @@
   </label>
 
   <label>Ημερομηνία αξιολόγησης
-    <input name="imnia" type="text" required>
+    <input name="imnia" type="date" required>
   </label>
 
   <label>Ημερομηνία Πράξης
-    <input name="imnia_praxis" type="text">
+    <input name="imnia_praxis" type="date">
   </label>
 
   <label>Επωνυμία
@@ -119,9 +119,20 @@
   </label>
 
   <button type="submit">Αποθήκευση</button>
+  <button type="button" class="back-btn" onclick="goBack()">Επιστροφή</button>
 </form>
 
 <script>
+
+function goBack() {
+  // Go back to the previous page or to list.html if preferred
+  if (document.referrer) {
+    window.history.back();
+  } else {
+    window.location.href = 'list.html';
+  }
+}
+
 document.getElementById('addForm').addEventListener('submit', async e => {
   e.preventDefault();
   const formData = new FormData(e.target);

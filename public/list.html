@@ -72,23 +72,31 @@
       cursor: pointer;
       text-decoration: none;
       font-size: 13px;
-      margin: 0 2px;
+      margin: 0 0px;
     }
 
     .button-edit {
-      background-color: #ffc107;
+      background-color: #ffffff;
     }
 
     .button-edit:hover {
-      background-color: #e0a800;
+      background-color: #acacac;
+    }
+
+    .button-excel {
+      background-color: #ffffff;
+    }
+
+    .button-excel:hover {
+      background-color: #acacac;
     }
 
     .button-delete {
-      background-color: #dc3545;
+      background-color: #ffffff;
     }
 
     .button-delete:hover {
-      background-color: #c82333;
+      background-color: #acacac;
     }
 
     .top-buttons {
@@ -124,16 +132,16 @@
 
     <table id="recordsTable">
       <colgroup>
-        <col style="width: 3%;"> <!-- a/a -->
+        <col style="width: 5%;"> <!-- a/a -->
         <col style="width: 5%;"> <!-- AA eadeies -->
         <col style="width: 5%;"> <!-- Eponimia -->
-        <col style="width: 15%;"> <!-- Eidos -->
-        <col style="width: 10%;"> <!-- Dhmos -->
+        <col style="width: 22%;"> <!-- Eidos -->
+        <col style="width: 20%;"> <!-- Dhmos -->
         <col style="width: 20%;"> <!-- odos -->
         <col style="width: 5%;"> <!-- aks 1ou -->
         <col style="width: 5%;"> <!-- aks 2ou -->
         <col style="width: 5%;"> <!-- aks 3ou -->
-        <col style="width: 6%;"> <!-- Actions -->
+        <col style="width: 8%;"> <!-- Actions -->
       </colgroup>
       <thead>
         <tr>
@@ -196,9 +204,9 @@ async function loadRecords() {
       <td>${record.axiologisi_lvl2}</td>
       <td>${record.axiologisi_lvl3}</td>
       <td>
-        <button class="btn btn-edit" onclick="editRecord(${record.id})">Edit</button>
-        <button class="btn btn-excel" onclick="exportToExcel(${record.id})">Excel</button>
-        <button class="btn btn-delete" onclick="deleteRecord(${record.id})">Del</button>
+        <button class="button button-edit" onclick="editRecord(${record.id})" title="Επεξεργασία Εγγραφής">🖊️</button>
+        <button class="button button-excel" onclick="exportToExcel(${record.id})" title="Εξαγωγή Excel">📊</button>
+        <button class="button button-delete" onclick="deleteRecord(${record.id})" title="Διαγραφή">❌</button>
       </td>
     `;
     tbody.appendChild(tr);
