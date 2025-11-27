@@ -3,7 +3,7 @@ const Service = require('node-windows').Service;
 // Create a new service object
 const svc = new Service({
   name: 'Aksiologiseis',                  // Service name
-  description: 'Εφαρμογή Αξιολογήσεωνno',
+  description: 'Εφαρμογή Αξιολογήσεων',
   script: 'C:\\dev\\aksiol\\server.js', // Absolute path to your main app file
   nodeOptions: [
     '--harmony',

@@ -166,6 +166,10 @@ app.get("/api/axiologiseis/:id/excel", (req, res) => {
 
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, (err) => {
+  if (err) {
+    console.error('Failed to start server:', err);
+    process.exit(1); // optional
+  }
   console.log(`Server running on http://localhost:${PORT}`);
 });
