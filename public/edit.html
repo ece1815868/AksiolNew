@@ -67,11 +67,11 @@
   </label>
 
   <label>Ημερομηνία αξιολόγησης
-    <input name="imnia" type="text" required>
+    <input name="imnia" type="date" required>
   </label>
 
   <label>Ημερομηνία Πράξης
-    <input name="imnia_praxis" type="text">
+    <input name="imnia_praxis" type="date">
   </label>
 
   <label>Επωνυμία
@@ -106,17 +106,32 @@
     <input name="email" type="email">
   </label>
 
-  <label>Αξιολόγηση 1ου Επιπέδου
-    <input name="axiologisi_lvl1" type="text">
-  </label>
+    <label>Αξιολόγηση 1ου Επιπέδου
+      <select name="axiologisi_lvl1">
+        <option value="">— Επιλογή —</option>
+        <option value="ΧΑΜΗΛΟ">ΧΑΜΗΛΟ</option>
+        <option value="ΜΕΣΑΙΟ">ΜΕΣΑΙΟ</option>
+        <option value="ΥΨΗΛΟ">ΥΨΗΛΟ</option>
+      </select>
+    </label>
 
-  <label>Αξιολόγηση 2ου Επιπέδου
-    <input name="axiologisi_lvl2" type="text">
-  </label>
+    <label>Αξιολόγηση 2ου Επιπέδου
+      <select name="axiologisi_lvl2">
+        <option value="">— Επιλογή —</option>
+        <option value="ΧΑΜΗΛΟ">ΧΑΜΗΛΟ</option>
+        <option value="ΜΕΣΑΙΟ">ΜΕΣΑΙΟ</option>
+        <option value="ΥΨΗΛΟ">ΥΨΗΛΟ</option>
+      </select>
+    </label>
 
-  <label>Αξιολόγηση 3ου Επιπέδου
-    <input name="axiologisi_lvl3" type="text">
-  </label>
+    <label>Αξιολόγηση 3ου Επιπέδου
+      <select name="axiologisi_lvl3">
+        <option value="">— Επιλογή —</option>
+        <option value="ΧΑΜΗΛΟ">ΧΑΜΗΛΟ</option>
+        <option value="ΜΕΣΑΙΟ">ΜΕΣΑΙΟ</option>
+        <option value="ΥΨΗΛΟ">ΥΨΗΛΟ</option>
+      </select>
+    </label>
 
   <button type="submit">Αποθήκευση</button>
 </form>

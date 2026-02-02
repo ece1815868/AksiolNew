@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Add New Record</title>
@@ -24,7 +25,7 @@
       border-radius: 8px;
       max-width: 800px;
       margin: 0 auto;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
     label {
@@ -57,101 +58,107 @@
     }
   </style>
 </head>
+
 <body>
 
-<h2>Προσθήκη νέας αξιολόγησης</h2>
+  <h2>Προσθήκη νέας αξιολόγησης</h2>
 
-<form id="addForm">
-  <label>Α/Α e-adeies
-    <input name="aa_aitisis" type="text" required>
-  </label>
+  <form id="addForm">
+    <label>Α/Α e-adeies
+      <input name="aa_aitisis"
+        type="text"
+        required>
+    </label>
 
-  <label>Ημερομηνία αξιολόγησης
-    <input name="imnia" type="date" required>
-  </label>
+    <label>Ημερομηνία αξιολόγησης
+      <input name="imnia"
+        type="date"
+        required>
+    </label>
 
-  <label>Ημερομηνία Πράξης
-    <input name="imnia_praxis" type="date">
-  </label>
+    <label>Ημερομηνία Πράξης
+      <input name="imnia_praxis"
+        type="date">
+    </label>
 
-  <label>Επωνυμία
-    <input name="eponimia" type="text" required>
-  </label>
+    <label>Επωνυμία
+      <input name="eponimia"
+        type="text"
+        required>
+    </label>
 
-  <label>Είδος δραστηριότητας
-    <input name="eidos_drast" type="text">
-  </label>
+    <label>Είδος δραστηριότητας
+      <input name="eidos_drast"
+        type="text">
+    </label>
 
-  <label>Περιφέρεια
-    <input name="perifereia" type="text">
-  </label>
+    <label>Περιφέρεια
+      <input name="perifereia"
+        type="text">
+    </label>
 
-  <label>Περιοχή
-    <input name="perioxi" type="text">
-  </label>
+    <label>Περιοχή
+      <input name="perioxi"
+        type="text">
+    </label>
 
-  <label>Οδός
-    <input name="odos" type="text">
-  </label>
+    <label>Οδός
+      <input name="odos"
+        type="text">
+    </label>
 
-  <label>TK
-    <input name="tk" type="text">
-  </label>
+    <label>TK
+      <input name="tk"
+        type="text">
+    </label>
 
-  <label>Τηλέφωνο
-    <input name="tilefono" type="text">
-  </label>
+    <label>Τηλέφωνο
+      <input name="tilefono"
+        type="text">
+    </label>
 
-  <label>eMail
-    <input name="email" type="email">
-  </label>
+    <label>eMail
+      <input name="email"
+        type="email">
+    </label>
 
-  <label>Αξιολόγηση 1ου Επιπέδου
-    <input name="axiologisi_lvl1" type="text">
-  </label>
+    <button type="submit">Αποθήκευση</button>
+    <button type="button"
+      class="back-btn"
+      onclick="goBack()">Επιστροφή</button>
+  </form>
 
-  <label>Αξιολόγηση 2ου Επιπέδου
-    <input name="axiologisi_lvl2" type="text">
-  </label>
+  <script>
 
-  <label>Αξιολόγηση 3ου Επιπέδου
-    <input name="axiologisi_lvl3" type="text">
-  </label>
+    function goBack() {
+      // Go back to the previous page or to list.html if preferred
+      if (document.referrer) {
+        window.history.back();
+      } else {
+        window.location.href = 'list.html';
+      }
+    }
 
-  <button type="submit">Αποθήκευση</button>
-  <button type="button" class="back-btn" onclick="goBack()">Επιστροφή</button>
-</form>
+    document.getElementById('addForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData.entries());
 
-<script>
+      const response = await fetch('/api/axiologiseis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
 
-function goBack() {
-  // Go back to the previous page or to list.html if preferred
-  if (document.referrer) {
-    window.history.back();
-  } else {
-    window.location.href = 'list.html';
-  }
-}
-
-document.getElementById('addForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  const formData = new FormData(e.target);
-  const data = Object.fromEntries(formData.entries());
-
-  const response = await fetch('/api/axiologiseis', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-
-  if (response.ok) {
-    alert('Record added successfully!');
-    window.location.href = 'list.html';
-  } else {
-    alert('Error adding record.');
-  }
-});
-</script>
+      if (response.ok) {
+        alert('Record added successfully!');
+        window.location.href = 'list.html';
+      } else {
+        alert('Error adding record.');
+      }
+    });
+  </script>
 
 </body>
+
 </html>

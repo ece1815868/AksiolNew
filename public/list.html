@@ -130,11 +130,15 @@
       <a href="add.html">➕ Προσθήκη</a>
     </div>
 
+    <div id="counter"
+      style="margin: 10px 0; font-weight: bold;">Εγγραφές: 0
+    </div>
+
     <table id="recordsTable">
       <colgroup>
         <col style="width: 5%;"> <!-- a/a -->
         <col style="width: 5%;"> <!-- AA eadeies -->
-        <col style="width: 5%;"> <!-- Eponimia -->
+        <col style="width: 6%;"> <!-- HMNIA -->
         <col style="width: 20%;"> <!-- Eidos -->
         <col style="width: 20%;"> <!-- Dhmos -->
         <col style="width: 20%;"> <!-- odos -->
@@ -184,16 +188,18 @@
     </table>
   </div>
 
-<script>
-async function loadRecords() {
-  const tbody = document.querySelector('#recordsTable tbody');
-  tbody.innerHTML = '';
-  const res = await fetch('/api/axiologiseis');
-  const records = await res.json();
+  <script>
+    async function loadRecords() {
+      const tbody = document.querySelector('#recordsTable tbody');
+      tbody.innerHTML = '';
+      const res = await fetch('/api/axiologiseis');
+      const records = await res.json();
+      
+      updateCounter(records.length);
 
-  records.forEach(record => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
+      records.forEach(record => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
       <td>${record.id}</td>
       <td>${record.aa_aitisis}</td>
       <td>${record.imnia}</td>
@@ -209,45 +215,70 @@ async function loadRecords() {
         <button class="button button-delete" onclick="deleteRecord(${record.id})" title="Διαγραφή">❌</button>
       </td>
     `;
-    tbody.appendChild(tr);
-  });
-}
+        tbody.appendChild(tr);
+      });
+    }
 
-function editRecord(id) {
-  window.location.href = `edit.html?id=${id}`;
-}
+    function editRecord(id) {
+      window.location.href = `edit.html?id=${id}`;
+    }
 
-async function deleteRecord(id) {
-  if (confirm('Επιθυμέτε να διαγράψετε την εγγραφή?')) {
-    const res = await fetch(`/api/axiologiseis/${id}`, { method: 'DELETE' });
-    if (res.ok) loadRecords();
-    else alert('Failed to delete record');
-  }
-}
-
-function exportToExcel(id) {
-  window.open(`/api/axiologiseis/${id}/excel`, "_blank");
-}
-
-// Column filters
-document.querySelectorAll('.filters input').forEach((input, colIndex) => {
-  input.addEventListener('keyup', () => {
-    const filter = input.value.toLowerCase();
-    const rows = document.querySelectorAll('#recordsTable tbody tr');
-
-    rows.forEach(row => {
-      const cell = row.cells[colIndex];
-      if (cell) {
-        const text = cell.textContent.toLowerCase();
-        row.style.display = text.includes(filter) ? '' : 'none';
+    async function deleteRecord(id) {
+      if (confirm('Επιθυμέτε να διαγράψετε την εγγραφή?')) {
+        const res = await fetch(`/api/axiologiseis/${id}`, { method: 'DELETE' });
+        if (res.ok) loadRecords();
+        else alert('Failed to delete record');
       }
-    });
-  });
-});
+    }
 
-// Load records on page load
-loadRecords();
-</script>
+    function exportToExcel(id) {
+      window.open(`/api/axiologiseis/${id}/excel`, "_blank");
+    }
+  
+    function updateCounter(count) {
+      const counter = document.getElementById('counter');
+      if (counter) {
+        counter.textContent = `Εγγραφές: ${count}`;
+      }
+    }
+
+        function applyFilters() {
+      const rows = document.querySelectorAll('#recordsTable tbody tr');
+      let visibleCount = 0;
+
+      rows.forEach(row => {
+        let show = true;
+
+        filterInputs.forEach((input, colIndex) => {
+          const filter = input.value.trim().toLowerCase();
+          if (!filter) return; // άδειο φίλτρο -> αγνόησέ το
+
+          const cell = row.cells[colIndex];
+          const text = (cell?.textContent || '').toLowerCase();
+
+          if (!text.includes(filter)) {
+            show = false;
+          }
+        });
+
+        row.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
+      });
+
+      updateCounter(visibleCount);
+    }
+
+    const filterInputs = document.querySelectorAll('.filters input');
+
+    filterInputs.forEach(input => {
+      input.addEventListener('keyup', applyFilters);
+    });
+
+    // Load records on page load
+    loadRecords();
+    applyFilters();
+  </script>
 
 </body>
+
 </html>

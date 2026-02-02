@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS Axiologiseis (
 // Routes
 // Get all records
 app.get("/api/axiologiseis", (req, res) => {
-  db.all("SELECT * FROM Axiologiseis", [], (err, rows) => {
+  db.all("SELECT * FROM Axiologiseis ORDER BY imnia DESC", [], (err, rows) => {
     if (err) res.status(500).json({ error: err.message });
     else res.json(rows);
   });

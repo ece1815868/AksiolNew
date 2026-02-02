@@ -1,16 +1,48 @@
-2025-11-27 12:09:20 - Starting C:\Program Files\nodejs\node.exe  --harmony --max_old_space_size=4096 C:\Users\John-NUC\AppData\Roaming\npm\node_modules\node-windows\lib\wrapper.js --file C:\dev\aksiol\server.js --scriptoptions= --log "Aksiologiseis wrapper" --grow 0.25 --wait 1 --maxrestarts 3 --abortonerror n --stopparentfirst undefined
-2025-11-27 12:09:20 - Started 13680
-2025-11-27 13:55:34 - Stopping aksiologiseis.exe
-2025-11-27 13:55:34 - ProcessKill 13680
-2025-11-27 13:55:34 - Found child process: 5556 Name: conhost.exe
-2025-11-27 13:55:34 - Found child process: 1880 Name: node.exe
-2025-11-27 13:55:34 - Stopping process 5556
-2025-11-27 13:55:34 - Send SIGINT 5556
-2025-11-27 13:55:34 - SIGINT to 5556 failed - Killing as fallback
-2025-11-27 13:55:34 - Stopping process 1880
-2025-11-27 13:55:34 - Send SIGINT 1880
-2025-11-27 13:55:34 - SIGINT to 1880 failed - Killing as fallback
-2025-11-27 13:55:34 - Stopping process 13680
-2025-11-27 13:55:34 - Send SIGINT 13680
-2025-11-27 13:55:34 - SIGINT to 13680 failed - Killing as fallback
-2025-11-27 13:55:34 - Finished aksiologiseis.exe
+2025-12-03 09:11:06 - Starting C:\Program Files\nodejs\node.exe  --max_old_space_size=4096 C:\Users\John-NUC\AppData\Roaming\npm\node_modules\node-windows\lib\wrapper.js --file C:\dev\aksiol\server.js --scriptoptions= --log "Aksiologiseis wrapper" --grow 0.25 --wait 1 --maxrestarts 3 --abortonerror n --stopparentfirst undefined
+2025-12-03 09:11:06 - Started 7940
+2025-12-03 14:46:04 - Stopping aksiologiseis.exe
+2025-12-03 14:46:04 - ProcessKill 7940
+2025-12-03 14:46:04 - Shutdown exception
+Message:Η κλάση δεν έχει καταχωρηθεί
+
+Stacktrace:   σε System.Runtime.InteropServices.Marshal.ThrowExceptionForHRInternal(Int32 errorCode, IntPtr errorInfo)
+   σε System.Management.ManagementScope.InitializeGuts(Object o)
+   σε System.Management.ManagementScope.Initialize()
+   σε System.Management.ManagementObjectSearcher.Initialize()
+   σε System.Management.ManagementObjectSearcher.Get()
+   σε winsw.WrapperService.GetChildPids(Int32 pid)
+   σε winsw.WrapperService.StopProcessAndChildren(Int32 pid)
+   σε winsw.WrapperService.StopIt()
+   σε winsw.WrapperService.OnShutdown()
+2025-12-04 08:40:44 - Starting C:\Program Files\nodejs\node.exe  --max_old_space_size=4096 C:\Users\John-NUC\AppData\Roaming\npm\node_modules\node-windows\lib\wrapper.js --file C:\dev\aksiol\server.js --scriptoptions= --log "Aksiologiseis wrapper" --grow 0.25 --wait 1 --maxrestarts 3 --abortonerror n --stopparentfirst undefined
+2025-12-04 08:40:44 - Started 8084
+2025-12-04 14:25:13 - Stopping aksiologiseis.exe
+2025-12-04 14:25:13 - ProcessKill 8084
+2025-12-04 14:25:13 - Shutdown exception
+Message:Η κλάση δεν έχει καταχωρηθεί
+
+Stacktrace:   σε System.Runtime.InteropServices.Marshal.ThrowExceptionForHRInternal(Int32 errorCode, IntPtr errorInfo)
+   σε System.Management.ManagementScope.InitializeGuts(Object o)
+   σε System.Management.ManagementScope.Initialize()
+   σε System.Management.ManagementObjectSearcher.Initialize()
+   σε System.Management.ManagementObjectSearcher.Get()
+   σε winsw.WrapperService.GetChildPids(Int32 pid)
+   σε winsw.WrapperService.StopProcessAndChildren(Int32 pid)
+   σε winsw.WrapperService.StopIt()
+   σε winsw.WrapperService.OnShutdown()
+2025-12-05 08:20:03 - Starting C:\Program Files\nodejs\node.exe  --max_old_space_size=4096 C:\Users\John-NUC\AppData\Roaming\npm\node_modules\node-windows\lib\wrapper.js --file C:\dev\aksiol\server.js --scriptoptions= --log "Aksiologiseis wrapper" --grow 0.25 --wait 1 --maxrestarts 3 --abortonerror n --stopparentfirst undefined
+2025-12-05 08:20:03 - Started 8472
+2025-12-05 10:19:48 - Stopping aksiologiseis.exe
+2025-12-05 10:19:48 - ProcessKill 8472
+2025-12-05 10:19:48 - Found child process: 8488 Name: conhost.exe
+2025-12-05 10:19:48 - Found child process: 7676 Name: node.exe
+2025-12-05 10:19:48 - Stopping process 8488
+2025-12-05 10:19:48 - Send SIGINT 8488
+2025-12-05 10:19:48 - SIGINT to 8488 failed - Killing as fallback
+2025-12-05 10:19:48 - Stopping process 7676
+2025-12-05 10:19:48 - Send SIGINT 7676
+2025-12-05 10:19:48 - SIGINT to 7676 failed - Killing as fallback
+2025-12-05 10:19:48 - Stopping process 8472
+2025-12-05 10:19:48 - Send SIGINT 8472
+2025-12-05 10:19:48 - SIGINT to 8472 failed - Killing as fallback
+2025-12-05 10:19:48 - Finished aksiologiseis.exe
