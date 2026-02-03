@@ -1,6 +1,6 @@
 node_modules/
+daemon/
 .env
 .DS_Store
 database.db
-daemon/
 database.sqbpro
