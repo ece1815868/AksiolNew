@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Λίστα Αξιολογήσεων</title>
+  <title>Προθεσμίες Αξιολογήσεων</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -64,6 +64,10 @@
       background-color: #e9ecef;
     }
 
+    .overdue { background-color: #ffe5e5 !important; }
+    .due-soon { background-color: #fff6d6 !important; }
+
+
     .button {
       padding: 6px 12px;
       border: none;
@@ -123,13 +127,13 @@
 <body>
 
   <div class="container">
-    <h1>Λίστα αξιολογήσεων</h1>
+    <h1>Προθεσμίες αξιολογήσεων</h1>
 
     <div class="top-buttons">
       <a href="index.html">🏠 Αρχική</a>
       <a href="add.html">➕ Προσθήκη</a>
     
-      <a href="due.html">⏳ Προθεσμίες</a>
+      <a href="list.html">📋 Λίστα </a>
     </div>
 
     <div id="counter"
@@ -147,7 +151,9 @@
         <col style="width: 5%;"> <!-- aks 1ou -->
         <col style="width: 5%;"> <!-- aks 2ou -->
         <col style="width: 5%;"> <!-- aks 3ou -->
-        <col style="width: 10%;"> <!-- Actions -->
+        <col style="width: 7%;"> <!-- Due Date -->
+        <col style="width: 6%;"> <!-- Days Left -->
+        <col style="width: 7%;"> <!-- Actions -->
       </colgroup>
       <thead>
         <tr>
@@ -160,6 +166,8 @@
           <th>Αξ. 1ου</th>
           <th>Αξ. 2ου</th>
           <th>Αξ. 3ου</th>
+          <th>Ημ/νία λήξης</th>
+          <th>Ημέρες</th>
           <th>Ενέργειες</th>
         </tr>
         <tr class="filters">
@@ -181,6 +189,10 @@
               placeholder="Αξ. 2ου" /></th>
           <th><input type="text"
               placeholder="Αξ. 3ου" /></th>
+          <th><input type="text"
+              placeholder="Ημ/νία λήξης" /></th>
+          <th><input type="text"
+              placeholder="Ημέρες" /></th>
           <th></th>
         </tr>
       </thead>
@@ -194,7 +206,7 @@
     async function loadRecords() {
       const tbody = document.querySelector('#recordsTable tbody');
       tbody.innerHTML = '';
-      const res = await fetch('/api/axiologiseis');
+      const res = await fetch('/api/axiologiseis/due');
       const records = await res.json();
       
       updateCounter(records.length);
@@ -211,12 +223,20 @@
       <td>${record.axiologisi_lvl1}</td>
       <td>${record.axiologisi_lvl2}</td>
       <td>${record.axiologisi_lvl3}</td>
+      <td>${record.due_date || ''}</td>
+      <td>${record.days_left ?? ''}</td>
       <td>
         <button class="button button-edit" onclick="editRecord(${record.id})" title="Επεξεργασία Εγγραφής">🖊️</button>
         <button class="button button-excel" onclick="exportToExcel(${record.id})" title="Εξαγωγή Excel">📊</button>
         <button class="button button-delete" onclick="deleteRecord(${record.id})" title="Διαγραφή">❌</button>
       </td>
     `;
+        // Highlight overdue / due soon
+        const dl = Number(record.days_left);
+        if (!Number.isNaN(dl)) {
+          if (dl < 0) tr.classList.add('overdue');
+          else if (dl <= 60) tr.classList.add('due-soon');
+        }
         tbody.appendChild(tr);
       });
     }

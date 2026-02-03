@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Edit Axiologisi</title>
@@ -24,7 +25,7 @@
       border-radius: 8px;
       max-width: 800px;
       margin: 0 auto;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
     label {
@@ -55,56 +56,84 @@
     button:hover {
       background: #218838;
     }
+
+    .back-wrapper {
+      display: flex; justify-content: flex-end; align-items: center;
+      top: 10px;
+    }
   </style>
 </head>
+
 <body>
 
-<h2>Επεξεργασία</h2>
+  <h2>Επεξεργασία</h2>
 
-<form id="editForm">
-  <label>Α/Α e-adeies
-    <input name="aa_aitisis" type="text" required>
-  </label>
+  <div class="back-wrapper">
+    <button type="button"
+      class="back-btn"
+      onclick="history.back()">
+      ⬅ Επιστροφή
+    </button>
+  </div>
 
-  <label>Ημερομηνία αξιολόγησης
-    <input name="imnia" type="date" required>
-  </label>
+  <form id="editForm">
+    <label>Α/Α e-adeies
+      <input name="aa_aitisis"
+        type="text"
+        required>
+    </label>
 
-  <label>Ημερομηνία Πράξης
-    <input name="imnia_praxis" type="date">
-  </label>
+    <label>Ημερομηνία αξιολόγησης
+      <input name="imnia"
+        type="date"
+        required>
+    </label>
 
-  <label>Επωνυμία
-    <input name="eponimia" type="text" required>
-  </label>
+    <label>Ημερομηνία Πράξης
+      <input name="imnia_praxis"
+        type="date">
+    </label>
 
-  <label>Είδος δραστηριότητας
-    <input name="eidos_drast" type="text">
-  </label>
+    <label>Επωνυμία
+      <input name="eponimia"
+        type="text"
+        required>
+    </label>
 
-  <label>Περιφέρεια
-    <input name="perifereia" type="text">
-  </label>
+    <label>Είδος δραστηριότητας
+      <input name="eidos_drast"
+        type="text">
+    </label>
 
-  <label>Περιοχή
-    <input name="perioxi" type="text">
-  </label>
+    <label>Περιφέρεια
+      <input name="perifereia"
+        type="text">
+    </label>
 
-  <label>Οδός
-    <input name="odos" type="text">
-  </label>
+    <label>Περιοχή
+      <input name="perioxi"
+        type="text">
+    </label>
 
-  <label>TK
-    <input name="tk" type="text">
-  </label>
+    <label>Οδός
+      <input name="odos"
+        type="text">
+    </label>
 
-  <label>Τηλέφωνο
-    <input name="tilefono" type="text">
-  </label>
+    <label>TK
+      <input name="tk"
+        type="text">
+    </label>
 
-  <label>eMail
-    <input name="email" type="email">
-  </label>
+    <label>Τηλέφωνο
+      <input name="tilefono"
+        type="text">
+    </label>
+
+    <label>eMail
+      <input name="email"
+        type="email">
+    </label>
 
     <label>Αξιολόγηση 1ου Επιπέδου
       <select name="axiologisi_lvl1">
@@ -133,47 +162,48 @@
       </select>
     </label>
 
-  <button type="submit">Αποθήκευση</button>
-</form>
+    <button type="submit">Αποθήκευση</button>
+  </form>
 
-<script>
-const urlParams = new URLSearchParams(window.location.search);
-const recordId = urlParams.get('id');
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const recordId = urlParams.get('id');
 
-async function loadRecord() {
-  const response = await fetch('/api/axiologiseis/' + recordId);
-  const record = await response.json();
+    async function loadRecord() {
+      const response = await fetch('/api/axiologiseis/' + recordId);
+      const record = await response.json();
 
-  const form = document.getElementById('editForm');
-  for (const key in record) {
-    if (form.elements[key]) {
-      form.elements[key].value = record[key];
+      const form = document.getElementById('editForm');
+      for (const key in record) {
+        if (form.elements[key]) {
+          form.elements[key].value = record[key];
+        }
+      }
     }
-  }
-}
 
-document.getElementById('editForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  const formData = new FormData(e.target);
-  const data = Object.fromEntries(formData.entries());
+    document.getElementById('editForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData.entries());
 
-  const response = await fetch('/api/axiologiseis/' + recordId, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
+      const response = await fetch('/api/axiologiseis/' + recordId, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
 
-  if (response.ok) {
-    alert('Επιτυχής ενημέρωση!');
-    window.location.href = 'list.html';
-  } else {
-    alert('Error updating record.');
-  }
-});
+      if (response.ok) {
+        alert('Επιτυχής ενημέρωση!');
+        window.location.href = 'list.html';
+      } else {
+        alert('Error updating record.');
+      }
+    });
 
-// Load record on page load
-loadRecord();
-</script>
+    // Load record on page load
+    loadRecord();
+  </script>
 
 </body>
+
 </html>

@@ -49,6 +49,38 @@ app.get("/api/axiologiseis", (req, res) => {
   });
 });
 
+// Get records with due_date and days_left (ΥΨΗΛΟ: +12 months, ΜΕΣΑΙΟ: +36 months; fallback lvl2; exclude ΧΑΜΗΛΟ)
+app.get("/api/axiologiseis/due", (req, res) => {
+  const sql = `
+    WITH base AS (
+      SELECT
+        *,
+        CASE
+          WHEN trim(COALESCE(axiologisi_lvl3,'')) = 'ΥΨΗΛΟ' THEN date(imnia, '+12 months')
+          WHEN trim(COALESCE(axiologisi_lvl3,'')) = 'ΜΕΣΑΙΟ' THEN date(imnia, '+36 months')
+          WHEN trim(COALESCE(axiologisi_lvl2,'')) = 'ΥΨΗΛΟ' THEN date(imnia, '+12 months')
+          WHEN trim(COALESCE(axiologisi_lvl2,'')) = 'ΜΕΣΑΙΟ' THEN date(imnia, '+36 months')
+          ELSE NULL
+        END AS due_date
+      FROM Axiologiseis
+      WHERE
+        trim(COALESCE(axiologisi_lvl3,'')) <> 'ΧΑΜΗΛΟ'
+        AND trim(COALESCE(axiologisi_lvl2,'')) <> 'ΧΑΜΗΛΟ'
+    )
+    SELECT
+      *,
+      CAST(julianday(due_date) - julianday(date('now','localtime')) AS INTEGER) AS days_left
+    FROM base
+    WHERE due_date IS NOT NULL
+    ORDER BY due_date ASC
+  `;
+
+  db.all(sql, [], (err, rows) => {
+    if (err) res.status(500).json({ error: err.message });
+    else res.json(rows);
+  });
+});
+
 // Get single record by id
 app.get("/api/axiologiseis/:id", (req, res) => {
   db.get("SELECT * FROM Axiologiseis WHERE id = ?", [req.params.id], (err, row) => {
