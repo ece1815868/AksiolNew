@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="el">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Νέος Έλεγχος</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f7f7f7;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px 20px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 900px;
+            margin: 0 auto;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: flex;
+            flex-direction: column;
+            font-weight: bold;
+        }
+
+        input,
+        select,
+        textarea {
+            padding: 6px 10px;
+            margin-top: 4px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        .span-2 {
+            grid-column: span 2;
+        }
+
+        button {
+            grid-column: span 2;
+            padding: 10px;
+            background: #0d6efd;
+            color: white;
+            font-weight: bold;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .back-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+
+        .back-wrapper button {
+            background: #6c757d;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>➕ Προσθήκη Ελέγχου</h2>
+
+    <div class="back-wrapper">
+        <button type="button"
+            onclick="history.back()">⬅ Επιστροφή</button>
+    </div>
+
+    <form id="elegxosForm">
+        <label>Α/Α αίτησης (aa_aitisis)
+            <input name="aa_aitisis"
+                type="text"
+                required />
+        </label>
+
+        <label>Ημερομηνία ελέγχου
+            <input name="imnia_elegxou"
+                type="date"
+                required />
+        </label>
+
+        <label>Αποτέλεσμα αξιολόγησης 3ου επιπέδου
+            <select name="apotelesma_lvl3"
+                required>
+                <option value="">— Επιλογή —</option>
+                <option value="ΧΑΜΗΛΟ">ΧΑΜΗΛΟ</option>
+                <option value="ΜΕΣΑΙΟ">ΜΕΣΑΙΟ</option>
+                <option value="ΥΨΗΛΟ">ΥΨΗΛΟ</option>
+            </select>
+        </label>
+
+        <label>Συμμόρφωση
+            <select name="symmorfosi"
+                required>
+                <option value="0">Όχι</option>
+                <option value="1">Ναι</option>
+            </select>
+        </label>
+
+        <label>Πρόστιμο
+            <select name="prostimo"
+                required>
+                <option value="0">Όχι</option>
+                <option value="1">Ναι</option>
+            </select>
+        </label>
+
+        <label class="span-2">Αξιωματικοί που έκαναν τον έλεγχο
+            <input name="axiomatikoi"
+                type="text"
+                placeholder="π.χ. Πυραγός (12345) Αγγελόπουλος Χρήστος" />
+        </label>
+
+        <label>Προθεσμία (ημέρες)
+            <input name="prothesmia"
+                type="number"
+                min="0"
+                step="1" />
+        </label>
+
+        <label class="span-2">Παρατηρήσεις
+            <textarea name="paratiriseis"
+                placeholder="Σημειώσεις / παρατηρήσεις..."></textarea>
+        </label>
+
+        <button type="submit">Αποθήκευση Ελέγχου</button>
+    </form>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const aa = params.get('aa_aitisis') || '';
+        const axiologisiId = params.get('axiologisi_id'); // για να γυρίσουμε πίσω στο edit
+
+        // Prefill aa_aitisis
+        document.querySelector('input[name="aa_aitisis"]').value = aa;
+
+        document.getElementById('elegxosForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            // cast σε αριθμούς για booleans/int
+            data.symmorfosi = Number(data.symmorfosi);
+            data.prostimo = Number(data.prostimo);
+            data.prothesmia = data.prothesmia === '' ? null : Number(data.prothesmia);
+
+            const resp = await fetch('/api/elegxoi', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (resp.ok) {
+                alert('Ο έλεγχος αποθηκεύτηκε!');
+                if (axiologisiId) {
+                    window.location.href = `edit.html?id=${encodeURIComponent(axiologisiId)}`;
+                } else {
+                    window.location.href = 'list.html';
+                }
+            } else {
+                const err = await resp.json().catch(() => ({}));
+                alert('Σφάλμα αποθήκευσης: ' + (err.error || 'unknown'));
+            }
+        });
+    </script>
+
+</body>
+
+</html>

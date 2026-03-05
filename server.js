@@ -40,6 +40,26 @@ CREATE TABLE IF NOT EXISTS Axiologiseis (
 )
 `);
 
+db.run(`
+CREATE TABLE IF NOT EXISTS Elegxoi (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  aa_aitisis TEXT NOT NULL,
+
+  imnia_elegxou TEXT NOT NULL,          -- DATE (as ISO string)
+  apotelesma_lvl3 TEXT NOT NULL,        -- ΧΑΜΗΛΟ/ΜΕΣΑΙΟ/ΥΨΗΛΟ
+
+  symmorfosi INTEGER NOT NULL DEFAULT 0, -- boolean 0/1
+  prostimo INTEGER NOT NULL DEFAULT 0,   -- boolean 0/1
+
+  axiomatikoi TEXT,
+  prothesmia INTEGER,
+  paratiriseis TEXT,
+
+  created_at TEXT DEFAULT (datetime('now','localtime'))
+)
+`);
+
+
 // Routes
 // Get all records
 app.get("/api/axiologiseis", (req, res) => {
@@ -91,24 +111,50 @@ app.get("/api/axiologiseis/:id", (req, res) => {
 
 // Create new record
 app.post("/api/axiologiseis", (req, res) => {
-  const data = req.body;
-  const sql = `
-    INSERT INTO Axiologiseis (
-      aa_aitisis, imnia, imnia_praxis, eponimia, eidos_drast,
-      perifereia, perioxi, odos, tk, tilefono, email,
-      axiologisi_lvl1, axiologisi_lvl2, axiologisi_lvl3
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-  const params = [
-    data.aa_aitisis, data.imnia, data.imnia_praxis, data.eponimia, data.eidos_drast,
-    data.perifereia, data.perioxi, data.odos, data.tk, data.tilefono, data.email,
-    data.axiologisi_lvl1, data.axiologisi_lvl2, data.axiologisi_lvl3
-  ];
 
-  db.run(sql, params, function(err) {
-    if (err) res.status(500).json({ error: err.message });
-    else res.json({ id: this.lastID });
-  });
+  const data = req.body;
+  const aa = (data.aa_aitisis || "").trim();
+
+  // 🔎 Έλεγχος αν υπάρχει ήδη
+  db.get(
+    "SELECT id FROM Axiologiseis WHERE aa_aitisis = ?",
+    [aa],
+    (err, row) => {
+
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
+      if (row) {
+        return res.status(400).json({
+          error: "Υπάρχει ήδη δραστηριότητα με αυτό το aa_aitisis"
+        });
+      }
+
+      // ✔ Αν δεν υπάρχει κάνουμε INSERT
+      const sql = `
+        INSERT INTO Axiologiseis (
+          aa_aitisis, imnia, imnia_praxis, eponimia, eidos_drast,
+          perifereia, perioxi, odos, tk, tilefono, email,
+          axiologisi_lvl1, axiologisi_lvl2, axiologisi_lvl3
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+
+      const params = [
+        aa, data.imnia, data.imnia_praxis, data.eponimia, data.eidos_drast, data.perifereia, data.perioxi, data.odos,
+        data.tk, data.tilefono, data.email, data.axiologisi_lvl1, data.axiologisi_lvl2, data.axiologisi_lvl3
+      ];
+
+      db.run(sql, params, function (err) {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+        res.json({ id: this.lastID });
+      });
+
+    }
+  );
+
 });
 
 // Update record
@@ -127,7 +173,7 @@ app.put("/api/axiologiseis/:id", (req, res) => {
     data.axiologisi_lvl1, data.axiologisi_lvl2, data.axiologisi_lvl3, req.params.id
   ];
 
-  db.run(sql, params, function(err) {
+  db.run(sql, params, function (err) {
     if (err) res.status(500).json({ error: err.message });
     else res.json({ updated: this.changes });
   });
@@ -135,7 +181,74 @@ app.put("/api/axiologiseis/:id", (req, res) => {
 
 // Delete record
 app.delete("/api/axiologiseis/:id", (req, res) => {
-  db.run("DELETE FROM Axiologiseis WHERE id=?", [req.params.id], function(err) {
+  db.run("DELETE FROM Axiologiseis WHERE id=?", [req.params.id], function (err) {
+    if (err) res.status(500).json({ error: err.message });
+    else res.json({ deleted: this.changes });
+  });
+});
+
+// -------------------- ELEGXOΙ --------------------
+
+// Get all elegxoi for a specific aa_aitisis
+// /api/elegxoi?aa_aitisis=123
+app.get("/api/elegxoi", (req, res) => {
+  const aa = (req.query.aa_aitisis || "").trim();
+  if (!aa) return res.status(400).json({ error: "aa_aitisis is required" });
+
+  db.all(
+    "SELECT * FROM Elegxoi WHERE aa_aitisis = ? ORDER BY date(imnia_elegxou) DESC, id DESC",
+    [aa],
+    (err, rows) => {
+      if (err) res.status(500).json({ error: err.message });
+      else res.json(rows);
+    }
+  );
+});
+
+// Create new elegxos
+app.post("/api/elegxoi", (req, res) => {
+  const d = req.body;
+
+  // basic validation
+  if (!d.aa_aitisis || !d.imnia_elegxou || !d.apotelesma_lvl3) {
+    return res.status(400).json({ error: "aa_aitisis, imnia_elegxou, apotelesma_lvl3 are required" });
+  }
+
+  const sql = `
+    INSERT INTO Elegxoi (
+      aa_aitisis, imnia_elegxou, apotelesma_lvl3,
+      symmorfosi, prostimo, axiomatikoi, prothesmia, paratiriseis
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  const params = [
+    d.aa_aitisis,
+    d.imnia_elegxou,
+    d.apotelesma_lvl3,
+    Number(d.symmorfosi) ? 1 : 0,
+    Number(d.prostimo) ? 1 : 0,
+    d.axiomatikoi || null,
+    (d.prothesmia === null || d.prothesmia === undefined || d.prothesmia === "") ? null : Number(d.prothesmia),
+    d.paratiriseis || null
+  ];
+
+  db.run(sql, params, function (err) {
+    if (err) res.status(500).json({ error: err.message });
+    else res.json({ id: this.lastID });
+  });
+});
+
+// (optional) Get single elegxos by id
+app.get("/api/elegxoi/:id", (req, res) => {
+  db.get("SELECT * FROM Elegxoi WHERE id = ?", [req.params.id], (err, row) => {
+    if (err) res.status(500).json({ error: err.message });
+    else res.json(row);
+  });
+});
+
+// (optional) Delete elegxos
+app.delete("/api/elegxoi/:id", (req, res) => {
+  db.run("DELETE FROM Elegxoi WHERE id = ?", [req.params.id], function (err) {
     if (err) res.status(500).json({ error: err.message });
     else res.json({ deleted: this.changes });
   });

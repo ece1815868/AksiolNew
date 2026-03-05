@@ -58,7 +58,9 @@
     }
 
     .back-wrapper {
-      display: flex; justify-content: flex-end; align-items: center;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
       top: 10px;
     }
   </style>
@@ -83,7 +85,7 @@
         required>
     </label>
 
-    <label>Ημερομηνία αξιολόγησης
+    <label>Ημερομηνία τελευταίας αξιολόγησης/ελέγχου
       <input name="imnia"
         type="date"
         required>
@@ -162,8 +164,49 @@
       </select>
     </label>
 
+    <button type="button"
+      id="addElegxosBtn"
+      style="background:#0d6efd;">
+      ➕ Προσθήκη Ελέγχου
+    </button>
+
     <button type="submit">Αποθήκευση</button>
   </form>
+
+  <hr style="margin: 20px 0;" />
+
+  <section id="elegxoiSection">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+      <h3 style="margin:0;">Έλεγχοι για Α/Α Αίτησης: <span id="elegxoiAaLabel">—</span></h3>
+      <button type="button"
+        id="refreshElegxoiBtn">🔄 Ανανέωση</button>
+    </div>
+
+    <div style="margin-top:10px; overflow:auto;">
+      <table border="1"
+        cellpadding="6"
+        cellspacing="0"
+        style="width:100%; background:white;">
+        <thead>
+          <tr>
+            <th>Ημ/νία</th>
+            <th>Επίπεδο</th>
+            <th>Συμμόρφωση</th>
+            <th>Πρόστιμο</th>
+            <th>Αξιωματικοί</th>
+            <th>Προθεσμία</th>
+            <th>Παρατηρήσεις</th>
+            <th>Ενέργειες</th>
+          </tr>
+        </thead>
+        <tbody id="elegxoiTbody">
+          <tr>
+            <td colspan="8">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 
   <script>
     const urlParams = new URLSearchParams(window.location.search);
@@ -179,6 +222,9 @@
           form.elements[key].value = record[key];
         }
       }
+
+      const aa = document.querySelector('input[name="aa_aitisis"]').value?.trim();
+      loadElegxoiForAa(aa);
     }
 
     document.getElementById('editForm').addEventListener('submit', async e => {
@@ -199,6 +245,93 @@
         alert('Error updating record.');
       }
     });
+
+    document.getElementById('addElegxosBtn').addEventListener('click', () => {
+      const aa = document.querySelector('input[name="aa_aitisis"]').value?.trim();
+      if (!aa) {
+        alert('Συμπλήρωσε πρώτα το aa_aitisis για να συσχετιστεί ο έλεγχος.');
+        return;
+      }
+      // περνάμε και το recordId (id της αξιολόγησης) για να γυρίσουμε πίσω στο edit μετά την αποθήκευση
+      window.location.href = `elegxos_new.html?aa_aitisis=${encodeURIComponent(aa)}&axiologisi_id=${encodeURIComponent(recordId)}`;
+    });
+
+    async function loadElegxoiForAa(aa) {
+      const label = document.getElementById("elegxoiAaLabel");
+      const tbody = document.getElementById("elegxoiTbody");
+
+      label.textContent = aa || "—";
+      tbody.innerHTML = `<tr><td colspan="8">Φόρτωση...</td></tr>`;
+
+      if (!aa) {
+        tbody.innerHTML = `<tr><td colspan="8">Δεν υπάρχει aa_aitisis.</td></tr>`;
+        return;
+      }
+
+      const resp = await fetch(`/api/elegxoi?aa_aitisis=${encodeURIComponent(aa)}`);
+      if (!resp.ok) {
+        tbody.innerHTML = `<tr><td colspan="8">Σφάλμα ανάκτησης ελέγχων.</td></tr>`;
+        return;
+      }
+
+      const rows = await resp.json();
+
+      if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="8">Δεν υπάρχουν έλεγχοι.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = rows.map(r => {
+        const symm = Number(r.symmorfosi) ? "ΝΑΙ" : "ΟΧΙ";
+        const pros = Number(r.prostimo) ? "ΝΑΙ" : "ΟΧΙ";
+        const proth = (r.prothesmia === null || r.prothesmia === undefined) ? "" : r.prothesmia;
+
+        // μικρό κόψιμο για να μη “απλώνει” ο πίνακας
+        const par = (r.paratiriseis || "");
+        
+        return `
+      <tr>
+        <td>${r.imnia_elegxou || ""}</td>
+        <td>${r.apotelesma_lvl3 || ""}</td>
+        <td>${symm}</td>
+        <td>${pros}</td>
+        <td>${(r.axiomatikoi || "")}</td>
+        <td style="text-align:center;">${proth}</td>
+        <td style="white-space: pre-wrap; word-break: break-word;">${escapeHtml(par)}</td>
+        <td style="white-space:nowrap;">
+          <button type="button" data-del-elegxos-id="${r.id}">🗑 Διαγραφή</button>
+        </td>
+      </tr>
+    `;
+      }).join("");
+
+      // bind delete buttons
+      tbody.querySelectorAll("button[data-del-elegxos-id]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = btn.getAttribute("data-del-elegxos-id");
+          const ok = confirm("Να διαγραφεί αυτός ο έλεγχος;");
+          if (!ok) return;
+
+          const delResp = await fetch(`/api/elegxoi/${encodeURIComponent(id)}`, { method: "DELETE" });
+          if (!delResp.ok) {
+            alert("Σφάλμα διαγραφής.");
+            return;
+          }
+
+          await loadElegxoiForAa(aa);
+        });
+      });
+    }
+
+    // helper για ασφαλές render σε HTML
+    function escapeHtml(str) {
+      return String(str || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
 
     // Load record on page load
     loadRecord();
