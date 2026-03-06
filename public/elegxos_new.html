@@ -110,7 +110,7 @@
         </label>
 
         <label>Συμμόρφωση
-            <select name="symmorfosi"
+            <select id="symmorfosi" name="symmorfosi"
                 required>
                 <option value="0">Όχι</option>
                 <option value="1">Ναι</option>
@@ -131,12 +131,14 @@
                 placeholder="π.χ. Πυραγός (12345) Αγγελόπουλος Χρήστος" />
         </label>
 
-        <label>Προθεσμία (ημέρες)
-            <input name="prothesmia"
-                type="number"
-                min="0"
-                step="1" />
-        </label>
+        <div id="prothesmiaWrapper">
+            <label>Προθεσμία (ημέρες)
+                <input name="prothesmia"
+                    type="number"
+                    min="0"
+                    step="1">
+            </label>
+        </div>
 
         <label class="span-2">Παρατηρήσεις
             <textarea name="paratiriseis"
@@ -177,6 +179,28 @@
                 alert(err.error || 'Σφάλμα αποθήκευσης.');
             }
         });
+
+        const symmorfosi = document.getElementById("symmorfosi");
+        const prothesmiaWrapper = document.getElementById("prothesmiaWrapper");
+        const prothesmiaInput = document.querySelector('input[name="prothesmia"]');
+
+        function updateProthesmia() {
+
+            if (symmorfosi.value === "0") {
+                prothesmiaWrapper.style.display = "block";
+                prothesmiaInput.required = true;
+            } else {
+                prothesmiaWrapper.style.display = "none";
+                prothesmiaInput.required = false;
+                prothesmiaInput.value = "";
+            }
+
+        }
+
+        symmorfosi.addEventListener("change", updateProthesmia);
+
+        // εκτέλεση όταν φορτώνει η σελίδα
+        updateProthesmia();
     </script>
 
 </body>
