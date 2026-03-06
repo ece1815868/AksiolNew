@@ -73,7 +73,7 @@
   <div class="back-wrapper">
     <button type="button"
       class="back-btn"
-      onclick="history.back()">
+      onclick="window.location.href='list.html'">
       ⬅ Επιστροφή
     </button>
   </div>
@@ -177,7 +177,7 @@
 
   <section id="elegxoiSection">
     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-      <h3 style="margin:0;">Έλεγχοι για Α/Α Αίτησης: <span id="elegxoiAaLabel">—</span></h3>
+      <h3 style="margin:0;">Ιστορικό Ελέγχων</h3>
       <button type="button"
         id="refreshElegxoiBtn">🔄 Ανανέωση</button>
     </div>
@@ -224,7 +224,7 @@
       }
 
       const aa = document.querySelector('input[name="aa_aitisis"]').value?.trim();
-      loadElegxoiForAa(aa);
+      loadElegxoiForAxiologisiId(recordId);
     }
 
     document.getElementById('editForm').addEventListener('submit', async e => {
@@ -247,28 +247,25 @@
     });
 
     document.getElementById('addElegxosBtn').addEventListener('click', () => {
-      const aa = document.querySelector('input[name="aa_aitisis"]').value?.trim();
-      if (!aa) {
-        alert('Συμπλήρωσε πρώτα το aa_aitisis για να συσχετιστεί ο έλεγχος.');
+      if (!recordId) {
+        alert('Δεν βρέθηκε το id της αξιολόγησης.');
         return;
       }
-      // περνάμε και το recordId (id της αξιολόγησης) για να γυρίσουμε πίσω στο edit μετά την αποθήκευση
-      window.location.href = `elegxos_new.html?aa_aitisis=${encodeURIComponent(aa)}&axiologisi_id=${encodeURIComponent(recordId)}`;
+
+      window.location.href = `elegxos_new.html?axiologisi_id=${encodeURIComponent(recordId)}`;
     });
 
-    async function loadElegxoiForAa(aa) {
-      const label = document.getElementById("elegxoiAaLabel");
+    async function loadElegxoiForAxiologisiId(axiologisiId) {
       const tbody = document.getElementById("elegxoiTbody");
-
-      label.textContent = aa || "—";
       tbody.innerHTML = `<tr><td colspan="8">Φόρτωση...</td></tr>`;
 
-      if (!aa) {
-        tbody.innerHTML = `<tr><td colspan="8">Δεν υπάρχει aa_aitisis.</td></tr>`;
+      if (!axiologisiId) {
+        tbody.innerHTML = `<tr><td colspan="8">Δεν βρέθηκε id αξιολόγησης.</td></tr>`;
         return;
       }
 
-      const resp = await fetch(`/api/elegxoi?aa_aitisis=${encodeURIComponent(aa)}`);
+      const resp = await fetch(`/api/elegxoi?axiologisi_id=${encodeURIComponent(axiologisiId)}`);
+
       if (!resp.ok) {
         tbody.innerHTML = `<tr><td colspan="8">Σφάλμα ανάκτησης ελέγχων.</td></tr>`;
         return;
@@ -284,41 +281,40 @@
       tbody.innerHTML = rows.map(r => {
         const symm = Number(r.symmorfosi) ? "ΝΑΙ" : "ΟΧΙ";
         const pros = Number(r.prostimo) ? "ΝΑΙ" : "ΟΧΙ";
-        const proth = (r.prothesmia === null || r.prothesmia === undefined) ? "" : r.prothesmia;
+        const proth = r.prothesmia == null ? "" : r.prothesmia;
+        const par = r.paratiriseis || "";
 
-        // μικρό κόψιμο για να μη “απλώνει” ο πίνακας
-        const par = (r.paratiriseis || "");
-        
         return `
       <tr>
         <td>${r.imnia_elegxou || ""}</td>
         <td>${r.apotelesma_lvl3 || ""}</td>
         <td>${symm}</td>
         <td>${pros}</td>
-        <td>${(r.axiomatikoi || "")}</td>
+        <td>${escapeHtml(r.axiomatikoi || "")}</td>
         <td style="text-align:center;">${proth}</td>
         <td style="white-space: pre-wrap; word-break: break-word;">${escapeHtml(par)}</td>
-        <td style="white-space:nowrap;">
+        <td>
           <button type="button" data-del-elegxos-id="${r.id}">🗑 Διαγραφή</button>
         </td>
       </tr>
     `;
       }).join("");
 
-      // bind delete buttons
       tbody.querySelectorAll("button[data-del-elegxos-id]").forEach(btn => {
         btn.addEventListener("click", async () => {
           const id = btn.getAttribute("data-del-elegxos-id");
-          const ok = confirm("Να διαγραφεί αυτός ο έλεγχος;");
-          if (!ok) return;
+          if (!confirm("Να διαγραφεί αυτός ο έλεγχος;")) return;
 
-          const delResp = await fetch(`/api/elegxoi/${encodeURIComponent(id)}`, { method: "DELETE" });
+          const delResp = await fetch(`/api/elegxoi/${encodeURIComponent(id)}`, {
+            method: "DELETE"
+          });
+
           if (!delResp.ok) {
             alert("Σφάλμα διαγραφής.");
             return;
           }
 
-          await loadElegxoiForAa(aa);
+          await loadElegxoiForAxiologisiId(axiologisiId);
         });
       });
     }

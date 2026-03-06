@@ -43,19 +43,16 @@ CREATE TABLE IF NOT EXISTS Axiologiseis (
 db.run(`
 CREATE TABLE IF NOT EXISTS Elegxoi (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  aa_aitisis TEXT NOT NULL,
-
-  imnia_elegxou TEXT NOT NULL,          -- DATE (as ISO string)
-  apotelesma_lvl3 TEXT NOT NULL,        -- ΧΑΜΗΛΟ/ΜΕΣΑΙΟ/ΥΨΗΛΟ
-
-  symmorfosi INTEGER NOT NULL DEFAULT 0, -- boolean 0/1
-  prostimo INTEGER NOT NULL DEFAULT 0,   -- boolean 0/1
-
+  axiologisi_id INTEGER NOT NULL,
+  imnia_elegxou TEXT NOT NULL,
+  apotelesma_lvl3 TEXT NOT NULL,
+  symmorfosi INTEGER NOT NULL DEFAULT 0,
+  prostimo INTEGER NOT NULL DEFAULT 0,
   axiomatikoi TEXT,
   prothesmia INTEGER,
   paratiriseis TEXT,
-
-  created_at TEXT DEFAULT (datetime('now','localtime'))
+  created_at TEXT DEFAULT (datetime('now','localtime')),
+  FOREIGN KEY (axiologisi_id) REFERENCES Axiologiseis(id)
 )
 `);
 
@@ -72,20 +69,62 @@ app.get("/api/axiologiseis", (req, res) => {
 // Get records with due_date and days_left (ΥΨΗΛΟ: +12 months, ΜΕΣΑΙΟ: +36 months; fallback lvl2; exclude ΧΑΜΗΛΟ)
 app.get("/api/axiologiseis/due", (req, res) => {
   const sql = `
-    WITH base AS (
+    WITH latest_elegxos AS (
+      SELECT e1.*
+      FROM Elegxoi e1
+      WHERE e1.id = (
+        SELECT e2.id
+        FROM Elegxoi e2
+        WHERE e2.axiologisi_id = e1.axiologisi_id
+        ORDER BY date(e2.imnia_elegxou) DESC, e2.id DESC
+        LIMIT 1
+      )
+    ),
+    base AS (
       SELECT
-        *,
+        a.*,
+        le.id AS elegxos_id,
+        le.imnia_elegxou,
+        le.apotelesma_lvl3 AS elegxos_lvl3,
+        le.symmorfosi,
+        le.prothesmia,
+
         CASE
-          WHEN trim(COALESCE(axiologisi_lvl3,'')) = 'ΥΨΗΛΟ' THEN date(imnia, '+12 months')
-          WHEN trim(COALESCE(axiologisi_lvl3,'')) = 'ΜΕΣΑΙΟ' THEN date(imnia, '+36 months')
-          WHEN trim(COALESCE(axiologisi_lvl2,'')) = 'ΥΨΗΛΟ' THEN date(imnia, '+12 months')
-          WHEN trim(COALESCE(axiologisi_lvl2,'')) = 'ΜΕΣΑΙΟ' THEN date(imnia, '+36 months')
-          ELSE NULL
+          -- 1) Υπάρχει έλεγχος και ΔΕΝ υπάρχει συμμόρφωση
+          WHEN le.id IS NOT NULL AND COALESCE(le.symmorfosi, 0) = 0 THEN
+            date(le.imnia_elegxou, '+' || COALESCE(le.prothesmia, 0) || ' days')
+
+          -- 2) Υπάρχει έλεγχος και ΥΠΑΡΧΕΙ συμμόρφωση
+          WHEN le.id IS NOT NULL AND COALESCE(le.symmorfosi, 0) = 1 THEN
+            CASE
+              WHEN trim(COALESCE(le.apotelesma_lvl3, '')) = 'ΥΨΗΛΟ' THEN date(le.imnia_elegxou, '+12 months')
+              WHEN trim(COALESCE(le.apotelesma_lvl3, '')) = 'ΜΕΣΑΙΟ' THEN date(le.imnia_elegxou, '+36 months')
+              ELSE NULL
+            END
+
+          -- 3) Δεν υπάρχει έλεγχος -> παλιά λογική από Axiologiseis
+          ELSE
+            CASE
+              WHEN trim(COALESCE(a.axiologisi_lvl3,'')) = 'ΥΨΗΛΟ' THEN date(a.imnia, '+12 months')
+              WHEN trim(COALESCE(a.axiologisi_lvl3,'')) = 'ΜΕΣΑΙΟ' THEN date(a.imnia, '+36 months')
+              WHEN trim(COALESCE(a.axiologisi_lvl2,'')) = 'ΥΨΗΛΟ' THEN date(a.imnia, '+12 months')
+              WHEN trim(COALESCE(a.axiologisi_lvl2,'')) = 'ΜΕΣΑΙΟ' THEN date(a.imnia, '+36 months')
+              ELSE NULL
+            END
         END AS due_date
-      FROM Axiologiseis
+
+      FROM Axiologiseis a
+      LEFT JOIN latest_elegxos le
+        ON le.axiologisi_id = a.id
+
       WHERE
-        trim(COALESCE(axiologisi_lvl3,'')) <> 'ΧΑΜΗΛΟ'
-        AND trim(COALESCE(axiologisi_lvl2,'')) <> 'ΧΑΜΗΛΟ'
+        (
+          le.id IS NOT NULL
+          OR (
+            trim(COALESCE(a.axiologisi_lvl3,'')) <> 'ΧΑΜΗΛΟ'
+            AND trim(COALESCE(a.axiologisi_lvl2,'')) <> 'ΧΑΜΗΛΟ'
+          )
+        )
     )
     SELECT
       *,
@@ -190,17 +229,19 @@ app.delete("/api/axiologiseis/:id", (req, res) => {
 // -------------------- ELEGXOΙ --------------------
 
 // Get all elegxoi for a specific aa_aitisis
-// /api/elegxoi?aa_aitisis=123
 app.get("/api/elegxoi", (req, res) => {
-  const aa = (req.query.aa_aitisis || "").trim();
-  if (!aa) return res.status(400).json({ error: "aa_aitisis is required" });
+  const axiologisiId = Number(req.query.axiologisi_id);
+
+  if (!axiologisiId) {
+    return res.status(400).json({ error: "axiologisi_id is required" });
+  }
 
   db.all(
-    "SELECT * FROM Elegxoi WHERE aa_aitisis = ? ORDER BY date(imnia_elegxou) DESC, id DESC",
-    [aa],
+    "SELECT * FROM Elegxoi WHERE axiologisi_id = ? ORDER BY date(imnia_elegxou) DESC, id DESC",
+    [axiologisiId],
     (err, rows) => {
-      if (err) res.status(500).json({ error: err.message });
-      else res.json(rows);
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(rows);
     }
   );
 });
@@ -209,32 +250,37 @@ app.get("/api/elegxoi", (req, res) => {
 app.post("/api/elegxoi", (req, res) => {
   const d = req.body;
 
-  // basic validation
-  if (!d.aa_aitisis || !d.imnia_elegxou || !d.apotelesma_lvl3) {
-    return res.status(400).json({ error: "aa_aitisis, imnia_elegxou, apotelesma_lvl3 are required" });
+  const axiologisiId = Number(d.axiologisi_id);
+
+  if (!axiologisiId) {
+    return res.status(400).json({ error: "Το axiologisi_id είναι υποχρεωτικό." });
+  }
+
+  if (!d.imnia_elegxou || !d.apotelesma_lvl3) {
+    return res.status(400).json({ error: "Συμπλήρωσε τα υποχρεωτικά πεδία." });
   }
 
   const sql = `
     INSERT INTO Elegxoi (
-      aa_aitisis, imnia_elegxou, apotelesma_lvl3,
+      axiologisi_id, imnia_elegxou, apotelesma_lvl3,
       symmorfosi, prostimo, axiomatikoi, prothesmia, paratiriseis
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   const params = [
-    d.aa_aitisis,
+    axiologisiId,
     d.imnia_elegxou,
     d.apotelesma_lvl3,
     Number(d.symmorfosi) ? 1 : 0,
     Number(d.prostimo) ? 1 : 0,
     d.axiomatikoi || null,
-    (d.prothesmia === null || d.prothesmia === undefined || d.prothesmia === "") ? null : Number(d.prothesmia),
+    d.prothesmia === null || d.prothesmia === undefined || d.prothesmia === "" ? null : Number(d.prothesmia),
     d.paratiriseis || null
   ];
 
   db.run(sql, params, function (err) {
-    if (err) res.status(500).json({ error: err.message });
-    else res.json({ id: this.lastID });
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ id: this.lastID });
   });
 });
 

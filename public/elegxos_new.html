@@ -90,11 +90,8 @@
     </div>
 
     <form id="elegxosForm">
-        <label>Α/Α αίτησης (aa_aitisis)
-            <input name="aa_aitisis"
-                type="text"
-                required />
-        </label>
+        <input type="hidden"
+            name="axiologisi_id" />
 
         <label>Ημερομηνία ελέγχου
             <input name="imnia_elegxou"
@@ -151,18 +148,17 @@
 
     <script>
         const params = new URLSearchParams(window.location.search);
-        const aa = params.get('aa_aitisis') || '';
-        const axiologisiId = params.get('axiologisi_id'); // για να γυρίσουμε πίσω στο edit
+        const axiologisiId = params.get('axiologisi_id');
 
-        // Prefill aa_aitisis
-        document.querySelector('input[name="aa_aitisis"]').value = aa;
+        document.querySelector('input[name="axiologisi_id"]').value = axiologisiId || '';
 
         document.getElementById('elegxosForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData.entries());
 
-            // cast σε αριθμούς για booleans/int
+            data.axiologisi_id = Number(data.axiologisi_id);
             data.symmorfosi = Number(data.symmorfosi);
             data.prostimo = Number(data.prostimo);
             data.prothesmia = data.prothesmia === '' ? null : Number(data.prothesmia);
@@ -174,15 +170,11 @@
             });
 
             if (resp.ok) {
-                alert('Ο έλεγχος αποθηκεύτηκε!');
-                if (axiologisiId) {
-                    window.location.href = `edit.html?id=${encodeURIComponent(axiologisiId)}`;
-                } else {
-                    window.location.href = 'list.html';
-                }
+                alert('Ο έλεγχος αποθηκεύτηκε.');
+                window.location.href = `edit.html?id=${encodeURIComponent(axiologisiId)}`;
             } else {
                 const err = await resp.json().catch(() => ({}));
-                alert('Σφάλμα αποθήκευσης: ' + (err.error || 'unknown'));
+                alert(err.error || 'Σφάλμα αποθήκευσης.');
             }
         });
     </script>

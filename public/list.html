@@ -128,7 +128,7 @@
     <div class="top-buttons">
       <a href="index.html">🏠 Αρχική</a>
       <a href="add.html">➕ Προσθήκη</a>
-    
+
       <a href="due.html">⏳ Προθεσμίες</a>
     </div>
 
@@ -196,7 +196,7 @@
       tbody.innerHTML = '';
       const res = await fetch('/api/axiologiseis');
       const records = await res.json();
-      
+
       updateCounter(records.length);
 
       records.forEach(record => {
@@ -236,7 +236,7 @@
     function exportToExcel(id) {
       window.open(`/api/axiologiseis/${id}/excel`, "_blank");
     }
-  
+
     function updateCounter(count) {
       const counter = document.getElementById('counter');
       if (counter) {
@@ -244,7 +244,7 @@
       }
     }
 
-        function applyFilters() {
+    function applyFilters() {
       const rows = document.querySelectorAll('#recordsTable tbody tr');
       let visibleCount = 0;
 
