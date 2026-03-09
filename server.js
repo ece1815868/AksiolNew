@@ -287,8 +287,9 @@ app.post("/api/elegxoi", (req, res) => {
 // (optional) Get single elegxos by id
 app.get("/api/elegxoi/:id", (req, res) => {
   db.get("SELECT * FROM Elegxoi WHERE id = ?", [req.params.id], (err, row) => {
-    if (err) res.status(500).json({ error: err.message });
-    else res.json(row);
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(404).json({ error: "Δεν βρέθηκε ο έλεγχος." });
+    res.json(row);
   });
 });
 
@@ -297,6 +298,47 @@ app.delete("/api/elegxoi/:id", (req, res) => {
   db.run("DELETE FROM Elegxoi WHERE id = ?", [req.params.id], function (err) {
     if (err) res.status(500).json({ error: err.message });
     else res.json({ deleted: this.changes });
+  });
+});
+
+app.put("/api/elegxoi/:id", (req, res) => {
+  const d = req.body;
+
+  if (!d.imnia_elegxou || !d.apotelesma_lvl3) {
+    return res.status(400).json({ error: "Συμπλήρωσε τα υποχρεωτικά πεδία." });
+  }
+
+  if (Number(d.symmorfosi) === 0 && (d.prothesmia === null || d.prothesmia === undefined || d.prothesmia === "")) {
+    return res.status(400).json({ error: "Όταν η συμμόρφωση είναι ΟΧΙ, η προθεσμία είναι υποχρεωτική." });
+  }
+
+  const sql = `
+    UPDATE Elegxoi
+    SET
+      imnia_elegxou = ?,
+      apotelesma_lvl3 = ?,
+      symmorfosi = ?,
+      prostimo = ?,
+      axiomatikoi = ?,
+      prothesmia = ?,
+      paratiriseis = ?
+    WHERE id = ?
+  `;
+
+  const params = [
+    d.imnia_elegxou,
+    d.apotelesma_lvl3,
+    Number(d.symmorfosi) ? 1 : 0,
+    Number(d.prostimo) ? 1 : 0,
+    d.axiomatikoi || null,
+    d.prothesmia === "" || d.prothesmia === null || d.prothesmia === undefined ? null : Number(d.prothesmia),
+    d.paratiriseis || null,
+    req.params.id
+  ];
+
+  db.run(sql, params, function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ updated: this.changes });
   });
 });
 

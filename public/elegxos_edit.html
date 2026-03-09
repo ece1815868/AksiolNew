@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="el">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Επεξεργασία Ελέγχου</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f7f7f7;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px 20px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 900px;
+            margin: 0 auto;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: flex;
+            flex-direction: column;
+            
+        }
+
+        input,
+        select,
+        textarea {
+            padding: 6px 10px;
+            margin-top: 4px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font: inherit;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .span-2 {
+            grid-column: span 2;
+        }
+
+        .buttons {
+            grid-column: span 2;
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 10px 14px;
+            background: #0d6efd;
+            color: white;
+            font-weight: bold;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button.secondary {
+            background: #6c757d;
+        }
+
+        #prothesmiaWrapper {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>✏️ Επεξεργασία Ελέγχου</h2>
+
+    <form id="elegxosForm">
+        <input type="hidden"
+            name="axiologisi_id" />
+        <input type="hidden"
+            name="id" />
+
+        <label>Ημερομηνία ελέγχου
+           <input name="imnia_elegxou" type="date" required />
+        </label>
+
+        <label>Αποτέλεσμα αξιολόγησης 3ου επιπέδου
+            <select name="apotelesma_lvl3"
+                required>
+                <option value="">— Επιλογή —</option>
+                <option value="ΧΑΜΗΛΟ">ΧΑΜΗΛΟ</option>
+                <option value="ΜΕΣΑΙΟ">ΜΕΣΑΙΟ</option>
+                <option value="ΥΨΗΛΟ">ΥΨΗΛΟ</option>
+            </select>
+        </label>
+
+        <label>Συμμόρφωση
+            <select id="symmorfosi"
+                name="symmorfosi"
+                required>
+                <option value="0">ΟΧΙ</option>
+                <option value="1">ΝΑΙ</option>
+            </select>
+        </label>
+
+        <label>Πρόστιμο
+            <select name="prostimo"
+                required>
+                <option value="0">ΟΧΙ</option>
+                <option value="1">ΝΑΙ</option>
+            </select>
+        </label>
+
+        <label class="span-2">Αξιωματικοί που έκαναν τον έλεγχο
+            <input name="axiomatikoi"
+                type="text" />
+        </label>
+
+        <div id="prothesmiaWrapper">
+            <label>Προθεσμία (ημέρες)
+                <input id="prothesmia"
+                    name="prothesmia"
+                    type="number"
+                    min="0"
+                    step="1" />
+            </label>
+        </div>
+
+        <label class="span-2">Παρατηρήσεις
+            <textarea name="paratiriseis"></textarea>
+        </label>
+
+        <div class="buttons">
+            <button type="submit">Αποθήκευση αλλαγών</button>
+            <button type="button"
+                class="secondary"
+                id="backBtn">⬅ Επιστροφή</button>
+        </div>
+    </form>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const elegxosId = params.get('id');
+
+        let parentAxiologisiId = null;
+
+        const form = document.getElementById('elegxosForm');
+        const symmorfosi = document.getElementById('symmorfosi');
+        const prothesmiaWrapper = document.getElementById('prothesmiaWrapper');
+        const prothesmiaInput = document.getElementById('prothesmia');
+        const backBtn = document.getElementById('backBtn');
+
+        function updateProthesmia() {
+            if (symmorfosi.value === "0") {
+                prothesmiaWrapper.style.display = "block";
+                prothesmiaInput.required = true;
+            } else {
+                prothesmiaWrapper.style.display = "none";
+                prothesmiaInput.required = false;
+                prothesmiaInput.value = "";
+            }
+        }
+
+        function toDatetimeLocalValue(value) {
+            if (!value) return "";
+            return String(value).slice(0, 16);
+        }
+
+        async function loadElegxos() {
+            if (!elegxosId) {
+                alert("Δεν βρέθηκε id ελέγχου.");
+                return;
+            }
+
+            const resp = await fetch(`/api/elegxoi/${encodeURIComponent(elegxosId)}`);
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                alert(err.error || "Σφάλμα φόρτωσης ελέγχου.");
+                return;
+            }
+
+            const data = await resp.json();
+
+            parentAxiologisiId = data.axiologisi_id;
+
+            form.querySelector('[name="id"]').value = data.id ?? "";
+            form.querySelector('[name="axiologisi_id"]').value = data.axiologisi_id ?? "";
+            form.querySelector('[name="imnia_elegxou"]').value = data.imnia_elegxou || "";
+            form.querySelector('[name="apotelesma_lvl3"]').value = data.apotelesma_lvl3 || "";
+            form.querySelector('[name="symmorfosi"]').value = String(data.symmorfosi ?? 0);
+            form.querySelector('[name="prostimo"]').value = String(data.prostimo ?? 0);
+            form.querySelector('[name="axiomatikoi"]').value = data.axiomatikoi || "";
+            form.querySelector('[name="prothesmia"]').value = data.prothesmia ?? "";
+            form.querySelector('[name="paratiriseis"]').value = data.paratiriseis || "";
+
+            updateProthesmia();
+        }
+
+        symmorfosi.addEventListener("change", updateProthesmia);
+
+        backBtn.addEventListener("click", () => {
+            if (parentAxiologisiId) {
+                window.location.href = `edit.html?id=${encodeURIComponent(parentAxiologisiId)}`;
+            } else {
+                window.location.href = "list.html";
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            if (data.symmorfosi === "0" && (!data.prothesmia || data.prothesmia.trim() === "")) {
+                alert("Όταν η συμμόρφωση είναι ΟΧΙ πρέπει να συμπληρωθεί προθεσμία.");
+                return;
+            }
+
+            data.axiologisi_id = Number(data.axiologisi_id);
+            data.symmorfosi = Number(data.symmorfosi);
+            data.prostimo = Number(data.prostimo);
+            data.prothesmia = data.prothesmia === "" ? null : Number(data.prothesmia);
+
+            const resp = await fetch(`/api/elegxoi/${encodeURIComponent(elegxosId)}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (resp.ok) {
+                alert('Ο έλεγχος ενημερώθηκε.');
+                if (parentAxiologisiId) {
+                    window.location.href = `edit.html?id=${encodeURIComponent(parentAxiologisiId)}`;
+                } else {
+                    window.location.href = 'list.html';
+                }
+            } else {
+                const err = await resp.json().catch(() => ({}));
+                alert(err.error || 'Σφάλμα ενημέρωσης.');
+            }
+        });
+
+        loadElegxos();
+    </script>
+
+</body>
+
+</html>

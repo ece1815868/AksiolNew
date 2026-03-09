@@ -294,6 +294,7 @@
         <td style="text-align:center;">${proth}</td>
         <td style="white-space: pre-wrap; word-break: break-word;">${escapeHtml(par)}</td>
         <td>
+          <button type="button" data-edit-elegxos-id="${r.id}">✏️ Επεξεργασία</button>
           <button type="button" data-del-elegxos-id="${r.id}">🗑 Διαγραφή</button>
         </td>
       </tr>
@@ -315,6 +316,13 @@
           }
 
           await loadElegxoiForAxiologisiId(axiologisiId);
+        });
+      });
+
+      tbody.querySelectorAll("button[data-edit-elegxos-id]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const id = btn.getAttribute("data-edit-elegxos-id");
+          window.location.href = `elegxos_edit.html?id=${encodeURIComponent(id)}`;
         });
       });
     }
