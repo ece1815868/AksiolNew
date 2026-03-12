@@ -215,14 +215,14 @@
         const tr = document.createElement('tr');
         tr.innerHTML = `
       <td>${record.id}</td>
-      <td>${record.aa_aitisis}</td>
+      <td>${record.aa_aitisis ?? ''}</td>
       <td>${record.imnia}</td>
       <td class="wrap">${record.eponimia}</td>
       <td class="wrap">${record.eidos_drast}</td>
       <td>${record.odos}, ${record.perifereia}</td>
-      <td>${record.axiologisi_lvl1}</td>
-      <td>${record.axiologisi_lvl2}</td>
-      <td>${record.axiologisi_lvl3}</td>
+      <td>${record.axiologisi_lvl1 ?? ''}</td>
+      <td>${record.axiologisi_lvl2 ?? ''}</td>
+      <td>${record.axiologisi_lvl3 ?? ''}</td>
       <td>${record.due_date || ''}</td>
       <td>${record.days_left ?? ''}</td>
       <td>
