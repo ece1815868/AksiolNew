@@ -132,8 +132,7 @@
       <a href="due.html">⏳ Προθεσμίες</a>
     </div>
 
-    <div id="counter"
-      style="margin: 10px 0; font-weight: bold;">Εγγραφές: 0
+    <div id="counter" style="margin: 10px 0; font-weight: bold;">Εγγραφές: 0
     </div>
 
     <table id="recordsTable">
@@ -163,24 +162,15 @@
           <th>Ενέργειες</th>
         </tr>
         <tr class="filters">
-          <th><input type="text"
-              placeholder="Α/Α" /></th>
-          <th><input type="text"
-              placeholder="A/Α e-adeies" /></th>
-          <th><input type="text"
-              placeholder="Ημερομηνία" /></th>
-          <th><input type="text"
-              placeholder=" Επωνυμία" /></th>
-          <th><input type="text"
-              placeholder="Είδος δραστηριότητας" /></th>
-          <th><input type="text"
-              placeholder="Οδός" /></th>
-          <th><input type="text"
-              placeholder="Αξ. 1ου" /></th>
-          <th><input type="text"
-              placeholder="Αξ. 2ου" /></th>
-          <th><input type="text"
-              placeholder="Αξ. 3ου" /></th>
+          <th><input type="text" placeholder="Α/Α" /></th>
+          <th><input type="text" placeholder="A/Α e-adeies" /></th>
+          <th><input type="text" placeholder="Ημερομηνία" /></th>
+          <th><input type="text" placeholder=" Επωνυμία" /></th>
+          <th><input type="text" placeholder="Είδος δραστηριότητας" /></th>
+          <th><input type="text" placeholder="Οδός" /></th>
+          <th><input type="text" placeholder="Αξ. 1ου" /></th>
+          <th><input type="text" placeholder="Αξ. 2ου" /></th>
+          <th><input type="text" placeholder="Αξ. 3ου" /></th>
           <th></th>
         </tr>
       </thead>
@@ -208,9 +198,9 @@
       <td class="wrap">${record.eponimia}</td>
       <td class="wrap">${record.eidos_drast}</td>
       <td>${record.odos}, ${record.perifereia}</td>
-      <td>${record.axiologisi_lvl1}</td>
-      <td>${record.axiologisi_lvl2}</td>
-      <td>${record.axiologisi_lvl3}</td>
+      <td>${record.axiologisi_lvl1 ?? ''}</td>
+      <td>${record.axiologisi_lvl2 ?? ''}</td>
+      <td>${record.axiologisi_lvl3 ?? ''}</td>
       <td>
         <button class="button button-edit" onclick="editRecord(${record.id})" title="Επεξεργασία Εγγραφής">🖊️</button>
         <button class="button button-excel" onclick="exportToExcel(${record.id})" title="Εξαγωγή Excel">📋</button>
