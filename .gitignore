@@ -3,3 +3,4 @@ daemon/
 .env
 .DS_Store
 database.sqbpro
+certs/
