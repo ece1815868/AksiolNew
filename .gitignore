@@ -4,3 +4,5 @@ daemon/
 .DS_Store
 database.sqbpro
 certs/
+*.exe
+databackup.db
