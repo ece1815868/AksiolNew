@@ -128,12 +128,10 @@
     <div class="top-buttons">
       <a href="index.html">🏠 Αρχική</a>
       <a href="add.html">➕ Προσθήκη</a>
-
       <a href="due.html">⏳ Προθεσμίες</a>
     </div>
 
-    <div id="counter"
-      style="margin: 10px 0; font-weight: bold;">Εγγραφές: 0
+    <div id="counter" style="margin: 10px 0; font-weight: bold;">Εγγραφές: 0
     </div>
 
     <table id="recordsTable">
@@ -163,24 +161,15 @@
           <th>Ενέργειες</th>
         </tr>
         <tr class="filters">
-          <th><input type="text"
-              placeholder="Α/Α" /></th>
-          <th><input type="text"
-              placeholder="A/Α e-adeies" /></th>
-          <th><input type="text"
-              placeholder="Ημερομηνία" /></th>
-          <th><input type="text"
-              placeholder=" Επωνυμία" /></th>
-          <th><input type="text"
-              placeholder="Είδος δραστηριότητας" /></th>
-          <th><input type="text"
-              placeholder="Οδός" /></th>
-          <th><input type="text"
-              placeholder="Αξ. 1ου" /></th>
-          <th><input type="text"
-              placeholder="Αξ. 2ου" /></th>
-          <th><input type="text"
-              placeholder="Αξ. 3ου" /></th>
+          <th><input type="text" placeholder="Α/Α" /></th>
+          <th><input type="text" placeholder="A/Α e-adeies" /></th>
+          <th><input type="text" placeholder="Ημερομηνία" /></th>
+          <th><input type="text" placeholder=" Επωνυμία" /></th>
+          <th><input type="text" placeholder="Είδος δραστηριότητας" /></th>
+          <th><input type="text" placeholder="Οδός" /></th>
+          <th><input type="text" placeholder="Αξ. 1ου" /></th>
+          <th><input type="text" placeholder="Αξ. 2ου" /></th>
+          <th><input type="text" placeholder="Αξ. 3ου" /></th>
           <th></th>
         </tr>
       </thead>
@@ -276,13 +265,27 @@
 
     const filterInputs = document.querySelectorAll('.filters input');
 
-    filterInputs.forEach(input => {
-      input.addEventListener('keyup', applyFilters);
+    filterInputs.forEach((input, index) => {
+      input.addEventListener('keyup', () => {
+        sessionStorage.setItem(`filter_${index}`, input.value);
+        applyFilters();
+      });
     });
 
+    function restoreFilters() {
+      filterInputs.forEach((input, index) => {
+        const saved = sessionStorage.getItem(`filter_${index}`);
+        if (saved !== null) {
+          input.value = saved;
+        }
+      });
+    }
+
     // Load records on page load
-    loadRecords();
-    applyFilters();
+    restoreFilters();
+    loadRecords().then(() => {
+      applyFilters();
+    });
   </script>
 
 </body>
