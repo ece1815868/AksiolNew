@@ -68,73 +68,57 @@
 
 <body>
 
-  <h2>Επεξεργασία</h2>
+  <h2 id="pageTitle">Επεξεργασία</h2>
 
   <div class="back-wrapper">
-    <button type="button"
-      class="back-btn"
-      onclick="window.location.href='list.html'">
+    <button type="button" class="back-btn" onclick="window.location.href='list.html'">
       ⬅ Επιστροφή
     </button>
   </div>
 
   <form id="editForm">
     <label>Α/Α e-adeies
-      <input name="aa_aitisis"
-        type="text"
-        required>
+      <input name="aa_aitisis" type="text" required>
     </label>
 
     <label>Ημερομηνία τελευταίας αξιολόγησης/ελέγχου
-      <input name="imnia"
-        type="date"
-        required>
+      <input name="imnia" type="date" required>
     </label>
 
     <label>Ημερομηνία Πράξης
-      <input name="imnia_praxis"
-        type="date">
+      <input name="imnia_praxis" type="date">
     </label>
 
     <label>Επωνυμία
-      <input name="eponimia"
-        type="text"
-        required>
+      <input name="eponimia" type="text" required>
     </label>
 
     <label>Είδος δραστηριότητας
-      <input name="eidos_drast"
-        type="text">
+      <input name="eidos_drast" type="text">
     </label>
 
     <label>Περιφέρεια
-      <input name="perifereia"
-        type="text">
+      <input name="perifereia" type="text">
     </label>
 
     <label>Περιοχή
-      <input name="perioxi"
-        type="text">
+      <input name="perioxi" type="text">
     </label>
 
     <label>Οδός
-      <input name="odos"
-        type="text">
+      <input name="odos" type="text">
     </label>
 
     <label>TK
-      <input name="tk"
-        type="text">
+      <input name="tk" type="text">
     </label>
 
     <label>Τηλέφωνο
-      <input name="tilefono"
-        type="text">
+      <input name="tilefono" type="text">
     </label>
 
     <label>eMail
-      <input name="email"
-        type="email">
+      <input name="email" type="email">
     </label>
 
     <label>Αξιολόγηση 1ου Επιπέδου
@@ -164,11 +148,15 @@
       </select>
     </label>
 
+    <label>
+      Μετεγενέστερη - νεότερη Πράξη
+      <input id="recordLookup" type="text" list="recordLookupList" placeholder="π.χ. 22" autocomplete="off">
+      <datalist id="recordLookupList"></datalist>
+    </label>
+
     <button type="submit">Αποθήκευση</button>
 
-    <button type="button"
-      id="addElegxosBtn"
-      style="background:#0d6efd;">
+    <button type="button" id="addElegxosBtn" style="background:#0d6efd;">
       ➕ Προσθήκη Ελέγχου
     </button>
 
@@ -179,15 +167,11 @@
   <section id="elegxoiSection">
     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
       <h3 style="margin:0;">Ιστορικό Ελέγχων</h3>
-      <button type="button"
-        id="refreshElegxoiBtn">🔄 Ανανέωση</button>
+      <button type="button" id="refreshElegxoiBtn">🔄 Ανανέωση</button>
     </div>
 
     <div style="margin-top:10px; overflow:auto;">
-      <table border="1"
-        cellpadding="6"
-        cellspacing="0"
-        style="width:100%; background:white;">
+      <table border="1" cellpadding="6" cellspacing="0" style="width:100%; background:white;">
         <thead>
           <tr>
             <th>Ημ/νία</th>
@@ -210,136 +194,314 @@
   </section>
 
   <script>
+    // ================================
+    // ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ ΣΕΛΙΔΑΣ
+    // ================================
+
     const urlParams = new URLSearchParams(window.location.search);
     const recordId = urlParams.get('id');
 
-    async function loadRecord() {
-      const response = await fetch('/api/axiologiseis/' + recordId);
-      const record = await response.json();
+    const form = document.getElementById('editForm');
+    const recordLookupInput = document.getElementById('recordLookup');
+    const recordLookupList = document.getElementById('recordLookupList');
+    const addElegxosBtn = document.getElementById('addElegxosBtn');
+    const refreshElegxoiBtn = document.getElementById('refreshElegxoiBtn');
+    const elegxoiTbody = document.getElementById('elegxoiTbody');
 
-      const form = document.getElementById('editForm');
-      for (const key in record) {
-        if (form.elements[key]) {
-          form.elements[key].value = record[key];
-        }
-      }
+    // Κατάσταση για lazy loading του datalist
+    let lookupLoaded = false;
+    let lookupLoading = false;
 
-      const aa = document.querySelector('input[name="aa_aitisis"]').value?.trim();
-      loadElegxoiForAxiologisiId(recordId);
+    // ================================
+    // ΑΡΧΙΚΟΠΟΙΗΣΗ
+    // ================================
+
+    init();
+
+    function init() {
+      bindEvents();
+      loadRecord();
     }
 
-    document.getElementById('editForm').addEventListener('submit', async e => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const data = Object.fromEntries(formData.entries());
+    function bindEvents() {
+      // Lazy loading του datalist μόνο όταν ο χρήστης μπει στο input
+      recordLookupInput.addEventListener('focus', loadLookupOptionsOnce);
 
-      const response = await fetch('/api/axiologiseis/' + recordId, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+      // Όταν ο χρήστης επιλέξει/γράψει τιμή στο helper input,
+      // κρατάμε μόνο το πρώτο id
+      recordLookupInput.addEventListener('change', handleLookupChange);
+
+      // Υποβολή φόρμας ενημέρωσης
+      form.addEventListener('submit', handleFormSubmit);
+
+      // Μετάβαση σε νέα καταχώριση ελέγχου
+      addElegxosBtn.addEventListener('click', handleAddElegxos);
+
+      // Χειροκίνητη ανανέωση ιστορικού ελέγχων
+      refreshElegxoiBtn.addEventListener('click', () => {
+        loadElegxoiForAxiologisiId(recordId);
       });
+    }
 
-      if (response.ok) {
-        alert('Επιτυχής ενημέρωση!');
-        window.location.href = 'list.html';
-      } else {
-        alert('Error updating record.');
+    // ================================
+    // ΦΟΡΤΩΣΗ ΚΥΡΙΑΣ ΕΓΓΡΑΦΗΣ
+    // ================================
+
+    async function loadRecord() {
+      if (!recordId) {
+        alert('Δεν βρέθηκε id εγγραφής.');
+        return;
       }
-    });
 
-    document.getElementById('addElegxosBtn').addEventListener('click', () => {
+      try {
+        const response = await fetch('/api/axiologiseis/' + encodeURIComponent(recordId));
+
+        if (!response.ok) {
+          alert('Σφάλμα φόρτωσης εγγραφής.');
+          return;
+        }
+
+        const record = await response.json();
+
+        document.getElementById('pageTitle').textContent =
+          `Επεξεργασία Α/Α ${record.id}`;
+
+        // Συμπλήρωση όλων των πεδίων της φόρμας που έχουν αντίστοιχο name
+        for (const key in record) {
+          if (form.elements[key]) {
+            form.elements[key].value = record[key] ?? '';
+          }
+        }
+
+        // Φόρτωση ιστορικού ελέγχων της εγγραφής
+        await loadElegxoiForAxiologisiId(recordId);
+
+      } catch (err) {
+        console.error('Σφάλμα loadRecord:', err);
+        alert('Παρουσιάστηκε σφάλμα κατά τη φόρτωση της εγγραφής.');
+      }
+    }
+
+    // ================================
+    // LOOKUP / DATALIST ΒΟΗΘΗΤΙΚΗΣ ΑΝΑΖΗΤΗΣΗΣ
+    // ================================
+
+    // Δημιουργεί το κείμενο που θα εμφανίζεται στο datalist
+    // π.χ. "22 - 123456 - 2026-04-01 - ΕΠΩΝΥΜΙΑ - Οδός, Δ. Περιοχή"
+    function buildLookupLabel(record) {
+      const addressPart = [record.odos || '', record.perioxi ? `Δ. ${record.perioxi}` : '']
+        .filter(Boolean)
+        .join(', ');
+
+      const parts = [
+        record.id,
+        record.aa_aitisis || '',
+        record.imnia || '',
+        record.eponimia || '',
+        addressPart
+      ].filter(Boolean);
+
+      return parts.join(' - ');
+    }
+
+    // Παίρνει τον πρώτο αριθμό από την αρχή του κειμένου
+    // π.χ. "22 - εταιρεία - οδός" -> "22"
+    function extractFirstId(text) {
+      const match = String(text || '').match(/^\s*(\d+)\b/);
+      return match ? match[1] : '';
+    }
+
+    // Escape ειδικών χαρακτήρων ώστε να μπαίνουν με ασφάλεια μέσα σε HTML
+    function escapeHtml(str) {
+      return String(str || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    // Φορτώνει μία φορά τα options του datalist μόνο όταν ζητηθούν,
+    // ώστε να μη βαραίνει άσκοπα η αρχική φόρτωση της σελίδας
+    async function loadLookupOptionsOnce() {
+      if (lookupLoaded || lookupLoading) return;
+
+      lookupLoading = true;
+
+      try {
+        const res = await fetch('/api/axiologiseis');
+
+        if (!res.ok) {
+          throw new Error('Failed to load lookup records');
+        }
+
+        const rows = await res.json();
+
+        recordLookupList.innerHTML = rows.map(record => {
+          const label = escapeHtml(buildLookupLabel(record));
+          return `<option value="${label}"></option>`;
+        }).join('');
+
+        lookupLoaded = true;
+
+      } catch (err) {
+        console.error('Σφάλμα loadLookupOptionsOnce:', err);
+      } finally {
+        lookupLoading = false;
+      }
+    }
+
+    // Όταν ο χρήστης διαλέξει μια εγγραφή από το datalist,
+    // το πεδίο κρατά μόνο το id
+    function handleLookupChange() {
+      const rawValue = recordLookupInput.value;
+      const id = extractFirstId(rawValue);
+
+      if (!id) {
+        alert('Δεν βρέθηκε έγκυρο id.');
+        return;
+      }
+
+      recordLookupInput.value = id;
+    }
+
+    // ================================
+    // ΥΠΟΒΟΛΗ ΦΟΡΜΑΣ ΕΝΗΜΕΡΩΣΗΣ
+    // ================================
+
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+
+      try {
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        const response = await fetch('/api/axiologiseis/' + encodeURIComponent(recordId), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+          alert('Επιτυχής ενημέρωση!');
+          window.location.href = 'list.html';
+        } else {
+          alert('Σφάλμα κατά την ενημέρωση της εγγραφής.');
+        }
+
+      } catch (err) {
+        console.error('Σφάλμα handleFormSubmit:', err);
+        alert('Παρουσιάστηκε σφάλμα κατά την αποθήκευση.');
+      }
+    }
+
+    // ================================
+    // ΕΝΕΡΓΕΙΕΣ ΣΧΕΤΙΚΑ ΜΕ ΕΛΕΓΧΟΥΣ
+    // ================================
+
+    function handleAddElegxos() {
       if (!recordId) {
         alert('Δεν βρέθηκε το id της αξιολόγησης.');
         return;
       }
 
       window.location.href = `elegxos_new.html?axiologisi_id=${encodeURIComponent(recordId)}`;
-    });
+    }
 
     async function loadElegxoiForAxiologisiId(axiologisiId) {
-      const tbody = document.getElementById("elegxoiTbody");
-      tbody.innerHTML = `<tr><td colspan="8">Φόρτωση...</td></tr>`;
+      elegxoiTbody.innerHTML = `<tr><td colspan="8">Φόρτωση...</td></tr>`;
 
       if (!axiologisiId) {
-        tbody.innerHTML = `<tr><td colspan="8">Δεν βρέθηκε id αξιολόγησης.</td></tr>`;
+        elegxoiTbody.innerHTML = `<tr><td colspan="8">Δεν βρέθηκε id αξιολόγησης.</td></tr>`;
         return;
       }
 
-      const resp = await fetch(`/api/elegxoi?axiologisi_id=${encodeURIComponent(axiologisiId)}`);
+      try {
+        const resp = await fetch(`/api/elegxoi?axiologisi_id=${encodeURIComponent(axiologisiId)}`);
 
-      if (!resp.ok) {
-        tbody.innerHTML = `<tr><td colspan="8">Σφάλμα ανάκτησης ελέγχων.</td></tr>`;
-        return;
+        if (!resp.ok) {
+          elegxoiTbody.innerHTML = `<tr><td colspan="8">Σφάλμα ανάκτησης ελέγχων.</td></tr>`;
+          return;
+        }
+
+        const rows = await resp.json();
+
+        if (!rows.length) {
+          elegxoiTbody.innerHTML = `<tr><td colspan="8">Δεν υπάρχουν έλεγχοι.</td></tr>`;
+          return;
+        }
+
+        renderElegxoiRows(rows, axiologisiId);
+
+      } catch (err) {
+        console.error('Σφάλμα loadElegxoiForAxiologisiId:', err);
+        elegxoiTbody.innerHTML = `<tr><td colspan="8">Σφάλμα ανάκτησης ελέγχων.</td></tr>`;
       }
+    }
 
-      const rows = await resp.json();
-
-      if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="8">Δεν υπάρχουν έλεγχοι.</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = rows.map(r => {
-        const symm = Number(r.symmorfosi) ? "ΝΑΙ" : "ΟΧΙ";
-        const pros = Number(r.prostimo) ? "ΝΑΙ" : "ΟΧΙ";
-        const proth = r.prothesmia == null ? "" : r.prothesmia;
-        const par = r.paratiriseis || "";
+    function renderElegxoiRows(rows, axiologisiId) {
+      elegxoiTbody.innerHTML = rows.map(row => {
+        const symmorfosiText = Number(row.symmorfosi) ? 'ΝΑΙ' : 'ΟΧΙ';
+        const prostimoText = Number(row.prostimo) ? 'ΝΑΙ' : 'ΟΧΙ';
+        const prothesmiaText = row.prothesmia == null ? '' : row.prothesmia;
+        const paratiriseisText = row.paratiriseis || '';
+        const axiomatikoiText = row.axiomatikoi || '';
 
         return `
-      <tr>
-        <td>${r.imnia_elegxou || ""}</td>
-        <td>${r.apotelesma_lvl3 || ""}</td>
-        <td>${symm}</td>
-        <td>${pros}</td>
-        <td>${escapeHtml(r.axiomatikoi || "")}</td>
-        <td style="text-align:center;">${proth}</td>
-        <td style="white-space: pre-wrap; word-break: break-word;">${escapeHtml(par)}</td>
-        <td>
-          <button type="button" data-edit-elegxos-id="${r.id}">✏️ Επεξεργασία</button>
-          <button type="button" data-del-elegxos-id="${r.id}">🗑 Διαγραφή</button>
-        </td>
-      </tr>
-    `;
-      }).join("");
+        <tr>
+          <td>${row.imnia_elegxou || ''}</td>
+          <td>${row.apotelesma_lvl3 || ''}</td>
+          <td>${symmorfosiText}</td>
+          <td>${prostimoText}</td>
+          <td>${escapeHtml(axiomatikoiText)}</td>
+          <td style="text-align:center;">${prothesmiaText}</td>
+          <td style="white-space: pre-wrap; word-break: break-word;">${escapeHtml(paratiriseisText)}</td>
+          <td>
+            <button type="button" data-edit-elegxos-id="${row.id}">✏️ Επεξεργασία</button>
+            <button type="button" data-del-elegxos-id="${row.id}">🗑 Διαγραφή</button>
+          </td>
+        </tr>
+      `;
+      }).join('');
 
-      tbody.querySelectorAll("button[data-del-elegxos-id]").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const id = btn.getAttribute("data-del-elegxos-id");
-          if (!confirm("Να διαγραφεί αυτός ο έλεγχος;")) return;
+      bindElegxoiRowEvents(axiologisiId);
+    }
 
-          const delResp = await fetch(`/api/elegxoi/${encodeURIComponent(id)}`, {
-            method: "DELETE"
-          });
+    function bindElegxoiRowEvents(axiologisiId) {
+      // Κουμπιά διαγραφής ελέγχου
+      elegxoiTbody.querySelectorAll('button[data-del-elegxos-id]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const elegxosId = btn.getAttribute('data-del-elegxos-id');
 
-          if (!delResp.ok) {
-            alert("Σφάλμα διαγραφής.");
-            return;
+          if (!confirm('Να διαγραφεί αυτός ο έλεγχος;')) return;
+
+          try {
+            const delResp = await fetch(`/api/elegxoi/${encodeURIComponent(elegxosId)}`, {
+              method: 'DELETE'
+            });
+
+            if (!delResp.ok) {
+              alert('Σφάλμα διαγραφής.');
+              return;
+            }
+
+            await loadElegxoiForAxiologisiId(axiologisiId);
+
+          } catch (err) {
+            console.error('Σφάλμα διαγραφής ελέγχου:', err);
+            alert('Παρουσιάστηκε σφάλμα κατά τη διαγραφή.');
           }
-
-          await loadElegxoiForAxiologisiId(axiologisiId);
         });
       });
 
-      tbody.querySelectorAll("button[data-edit-elegxos-id]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const id = btn.getAttribute("data-edit-elegxos-id");
-          window.location.href = `elegxos_edit.html?id=${encodeURIComponent(id)}`;
+      // Κουμπιά επεξεργασίας ελέγχου
+      elegxoiTbody.querySelectorAll('button[data-edit-elegxos-id]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const elegxosId = btn.getAttribute('data-edit-elegxos-id');
+          window.location.href = `elegxos_edit.html?id=${encodeURIComponent(elegxosId)}`;
         });
       });
     }
-
-    // helper για ασφαλές render σε HTML
-    function escapeHtml(str) {
-      return String(str || "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
-    // Load record on page load
-    loadRecord();
   </script>
 
 </body>
