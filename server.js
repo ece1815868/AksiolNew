@@ -4,6 +4,8 @@ const bodyParser = require("body-parser");
 const XlsxPopulate = require("xlsx-populate");
 const path = require("path");
 const cors = require("cors");
+const cron = require("node-cron");
+const fs = require("fs");
 
 const app = express();
 const PORT = 3000;
@@ -17,6 +19,18 @@ app.use(express.static(path.join(__dirname, "public")));
 const db = new Database("./database.db");
 db.pragma("foreign_keys = ON");
 console.log("Connected to SQLite database.");
+
+// φάκελος backup (δημιουργείται αν δεν υπάρχει)
+fs.mkdirSync("./backup", { recursive: true });
+
+// κάθε Παρασκευή στις 12:00
+cron.schedule("0 12 * * 5", async () => {
+  const date = new Date().toISOString().slice(0,10).replace(/-/g, "");
+  
+  await db.backup(`./backup/backup_${date}.db`);
+  
+  console.log("Backup OK:", date);
+});
 
 // Create tables if not exists
 db.exec(`
@@ -35,7 +49,8 @@ CREATE TABLE IF NOT EXISTS Axiologiseis (
   email TEXT,
   axiologisi_lvl1 TEXT,
   axiologisi_lvl2 TEXT,
-  axiologisi_lvl3 TEXT
+  axiologisi_lvl3 TEXT,
+  metegenesteri_praxi INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS Elegxoi (
@@ -52,6 +67,17 @@ CREATE TABLE IF NOT EXISTS Elegxoi (
   FOREIGN KEY (axiologisi_id) REFERENCES Axiologiseis(id)
 );
 `);
+
+// -- MIGRATE ONLY TEMPORARY ********** START
+const axiologiseisColumns = db.prepare(`PRAGMA table_info(Axiologiseis)`).all();
+const hasMetegenesteriPraxi = axiologiseisColumns.some(
+  col => col.name === "metegenesteri_praxi"
+);
+
+if (!hasMetegenesteriPraxi) {
+  db.exec(`ALTER TABLE Axiologiseis ADD COLUMN metegenesteri_praxi INTEGER`);
+}
+// -- MIGRATE ONLY TEMPORARY ********** END
 
 // -------------------- Axiologiseis --------------------
 
@@ -111,11 +137,12 @@ app.get("/api/axiologiseis/due", (req, res) => {
       LEFT JOIN latest_elegxos le
         ON le.axiologisi_id = a.id
       WHERE
-        (
+        COALESCE(a.metegenesteri_praxi, 0) = 0
+        AND (
           le.id IS NOT NULL
           OR (
-            trim(COALESCE(a.axiologisi_lvl3,'')) <> 'ΧΑΜΗΛΟ'
-            AND trim(COALESCE(a.axiologisi_lvl2,'')) <> 'ΧΑΜΗΛΟ'
+          trim(COALESCE(a.axiologisi_lvl3,'')) <> 'ΧΑΜΗΛΟ'
+          AND trim(COALESCE(a.axiologisi_lvl2,'')) <> 'ΧΑΜΗΛΟ'
           )
         )
     )
@@ -172,8 +199,9 @@ app.post("/api/axiologiseis", (req, res) => {
       INSERT INTO Axiologiseis (
         aa_aitisis, imnia, imnia_praxis, eponimia, eidos_drast,
         perifereia, perioxi, odos, tk, tilefono, email,
-        axiologisi_lvl1, axiologisi_lvl2, axiologisi_lvl3
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        axiologisi_lvl1, axiologisi_lvl2, axiologisi_lvl3,
+        metegenesteri_praxi
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const info = stmt.run(
@@ -190,7 +218,10 @@ app.post("/api/axiologiseis", (req, res) => {
       data.email,
       data.axiologisi_lvl1,
       data.axiologisi_lvl2,
-      data.axiologisi_lvl3
+      data.axiologisi_lvl3,
+      data.metegenesteri_praxi === "" || data.metegenesteri_praxi == null
+        ? null
+        : Number(data.metegenesteri_praxi)
     );
 
     res.json({ id: info.lastInsertRowid });
@@ -208,7 +239,8 @@ app.put("/api/axiologiseis/:id", (req, res) => {
       UPDATE Axiologiseis SET
         aa_aitisis=?, imnia=?, imnia_praxis=?, eponimia=?, eidos_drast=?,
         perifereia=?, perioxi=?, odos=?, tk=?, tilefono=?, email=?,
-        axiologisi_lvl1=?, axiologisi_lvl2=?, axiologisi_lvl3=?
+        axiologisi_lvl1=?, axiologisi_lvl2=?, axiologisi_lvl3=?,
+        metegenesteri_praxi=?
       WHERE id=?
     `);
 
@@ -227,6 +259,9 @@ app.put("/api/axiologiseis/:id", (req, res) => {
       data.axiologisi_lvl1,
       data.axiologisi_lvl2,
       data.axiologisi_lvl3,
+      data.metegenesteri_praxi === "" || data.metegenesteri_praxi == null
+        ? null
+        : Number(data.metegenesteri_praxi),
       req.params.id
     );
 

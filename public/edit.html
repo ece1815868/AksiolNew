@@ -150,7 +150,8 @@
 
     <label>
       Μετεγενέστερη - νεότερη Πράξη
-      <input id="recordLookup" type="text" list="recordLookupList" placeholder="π.χ. 22" autocomplete="off">
+      <input id="recordLookup" name="metegenesteri_praxi" type="text" list="recordLookupList" placeholder="π.χ. 22"
+        autocomplete="off">
       <datalist id="recordLookupList"></datalist>
     </label>
 
@@ -375,6 +376,17 @@
       try {
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
+
+        const rawLookupValue = recordLookupInput.value.trim();
+        data.metegenesteri_praxi = rawLookupValue ? extractFirstId(rawLookupValue) : '';
+
+        if (
+          data.metegenesteri_praxi &&
+          Number(data.metegenesteri_praxi) === Number(recordId)
+        ) {
+          alert('Η μετεγενέστερη πράξη δεν μπορεί να είναι η ίδια εγγραφή.');
+          return;
+        }
 
         const response = await fetch('/api/axiologiseis/' + encodeURIComponent(recordId), {
           method: 'PUT',
