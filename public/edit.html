@@ -71,54 +71,70 @@
   <h2 id="pageTitle">Επεξεργασία</h2>
 
   <div class="back-wrapper">
-    <button type="button" class="back-btn" onclick="history.back()">
+    <button type="button"
+      class="back-btn"
+      onclick="history.back()">
       ⬅ Επιστροφή
     </button>
   </div>
 
   <form id="editForm">
     <label>Α/Α e-adeies
-      <input name="aa_aitisis" type="text" required>
+      <input name="aa_aitisis"
+        type="text"
+        required>
     </label>
 
     <label>Ημερομηνία τελευταίας αξιολόγησης/ελέγχου
-      <input name="imnia" type="date" required>
+      <input name="imnia"
+        type="date"
+        required>
     </label>
 
     <label>Ημερομηνία Πράξης
-      <input name="imnia_praxis" type="date">
+      <input name="imnia_praxis"
+        type="date">
     </label>
 
     <label>Επωνυμία
-      <input name="eponimia" type="text" required>
+      <input name="eponimia"
+        type="text"
+        required>
     </label>
 
     <label>Είδος δραστηριότητας
-      <input name="eidos_drast" type="text">
+      <input name="eidos_drast"
+        type="text">
     </label>
 
     <label>Περιφέρεια
-      <input name="perifereia" type="text">
+      <input name="perifereia"
+        type="text">
     </label>
 
     <label>Περιοχή
-      <input name="perioxi" type="text">
+      <input name="perioxi"
+        type="text">
     </label>
 
     <label>Οδός
-      <input name="odos" type="text">
+      <input name="odos"
+        type="text">
     </label>
 
     <label>TK
-      <input name="tk" type="text">
+      <input name="tk"
+        type="text">
     </label>
 
     <label>Τηλέφωνο
-      <input name="tilefono" type="text">
+      <input name="tilefono"
+        type="text">
     </label>
 
     <label>eMail
-      <input name="email" type="email">
+      <input name="email"
+        type="email">
     </label>
 
     <label>Αξιολόγηση 1ου Επιπέδου
@@ -150,14 +166,20 @@
 
     <label>
       Μετεγενέστερη - νεότερη Πράξη
-      <input id="recordLookup" name="metegenesteri_praxi" type="text" list="recordLookupList" placeholder="π.χ. 22"
+      <input id="recordLookup"
+        name="metegenesteri_praxi"
+        type="text"
+        list="recordLookupList"
+        placeholder="π.χ. 22"
         autocomplete="off">
       <datalist id="recordLookupList"></datalist>
     </label>
 
     <button type="submit">Αποθήκευση</button>
 
-    <button type="button" id="addElegxosBtn" style="background:#0d6efd;">
+    <button type="button"
+      id="addElegxosBtn"
+      style="background:#0d6efd;">
       ➕ Προσθήκη Ελέγχου
     </button>
 
@@ -168,11 +190,15 @@
   <section id="elegxoiSection">
     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
       <h3 style="margin:0;">Ιστορικό Ελέγχων</h3>
-      <button type="button" id="refreshElegxoiBtn">🔄 Ανανέωση</button>
+      <button type="button"
+        id="refreshElegxoiBtn">🔄 Ανανέωση</button>
     </div>
 
     <div style="margin-top:10px; overflow:auto;">
-      <table border="1" cellpadding="6" cellspacing="0" style="width:100%; background:white;">
+      <table border="1"
+        cellpadding="6"
+        cellspacing="0"
+        style="width:100%; background:white;">
         <thead>
           <tr>
             <th>Ημ/νία</th>
@@ -355,11 +381,15 @@
     // Όταν ο χρήστης διαλέξει μια εγγραφή από το datalist,
     // το πεδίο κρατά μόνο το id
     function handleLookupChange() {
-      const rawValue = recordLookupInput.value;
+      const rawValue = recordLookupInput.value.trim();
+
+      // Αν είναι άδειο, δεν κάνουμε τίποτα
+      if (!rawValue) return;
+
       const id = extractFirstId(rawValue);
 
       if (!id) {
-        alert('Δεν βρέθηκε έγκυρο id.');
+        alert("Δεν βρέθηκε έγκυρο id.");
         return;
       }
 
