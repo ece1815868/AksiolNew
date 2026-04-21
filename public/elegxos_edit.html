@@ -212,7 +212,7 @@
             if (parentAxiologisiId) {
                 window.location.href = `edit.html?id=${encodeURIComponent(parentAxiologisiId)}`;
             } else {
-                window.location.href = "list.html";
+                history.back(); 
             }
         });
 
