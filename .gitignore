@@ -6,3 +6,5 @@ database.sqbpro
 certs/
 *.exe
 databackup.db
+start.bat   
+package-lock.json
